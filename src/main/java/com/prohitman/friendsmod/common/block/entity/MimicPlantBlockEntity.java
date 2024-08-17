@@ -66,6 +66,7 @@ public class MimicPlantBlockEntity extends BlockEntity {
             mimic.setPlayerUuid(this.getOwner().id().get());
             mimic.setPos(this.getBlockPos().getX(), this.getBlockPos().getY(), this.getBlockPos().getZ());
             mimic.generateColors();
+            mimic.generateLimbScales();
             level.addFreshEntity(mimic);
             level.destroyBlock(this.getBlockPos(), false);
         }

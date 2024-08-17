@@ -10,6 +10,7 @@ import net.minecraft.client.model.HumanoidArmorModel;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -39,6 +40,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.Tags;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3f;
 
 import java.util.Iterator;
 import java.util.List;
@@ -197,7 +199,26 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
             poseStack.popPose();
         }
 
+        public static void scaleModelParts(MimicEntity entity, PlayerModel<MimicEntity> model){
+            model.leftArm.xScale = 1 + entity.getEntityData().get(MimicEntity.LARM_SCALE);
+            model.leftArm.yScale = 1 + entity.getEntityData().get(MimicEntity.LARM_SCALE);
+            model.leftArm.zScale = 1 + entity.getEntityData().get(MimicEntity.LARM_SCALE);
+
+            model.rightArm.xScale = 1 + entity.getEntityData().get(MimicEntity.RARM_SCALE);
+            model.rightArm.yScale = 1 + entity.getEntityData().get(MimicEntity.RARM_SCALE);
+            model.rightArm.zScale = 1 + entity.getEntityData().get(MimicEntity.RARM_SCALE);
+
+            model.rightLeg.xScale = 1 + entity.getEntityData().get(MimicEntity.RLEG_SCALE);
+            model.rightLeg.yScale = 1 + entity.getEntityData().get(MimicEntity.RLEG_SCALE);
+            model.rightLeg.zScale = 1 + entity.getEntityData().get(MimicEntity.RLEG_SCALE);
+
+            model.leftLeg.xScale = 1 + entity.getEntityData().get(MimicEntity.LLEG_SCALE);
+            model.leftLeg.yScale = 1 + entity.getEntityData().get(MimicEntity.LLEG_SCALE);
+            model.leftLeg.zScale = 1 + entity.getEntityData().get(MimicEntity.LLEG_SCALE);
+        }
+
         public static void setupPoses(MimicEntity entity, PlayerModel<MimicEntity> model) {
+            scaleModelParts(entity, model);
             HumanoidModel.ArmPose mainHand = getArmPose(entity, InteractionHand.MAIN_HAND);
             HumanoidModel.ArmPose offHand = getArmPose(entity, InteractionHand.OFF_HAND);
             if (mainHand.isTwoHanded()) {
