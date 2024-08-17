@@ -14,6 +14,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Block;
@@ -45,7 +46,6 @@ public class MimicPlantBlockEntity extends BlockEntity {
         mainThreadExecutor = Minecraft.getInstance();
     }
 
-
     public MimicPlantBlockEntity(BlockPos pos, BlockState blockState) {
         super(ModBlockEntities.MIMIC_PLANT_BLOCK_ENTITY.get(), pos, blockState);
     }
@@ -67,6 +67,7 @@ public class MimicPlantBlockEntity extends BlockEntity {
             mimic.setPos(this.getBlockPos().getX(), this.getBlockPos().getY(), this.getBlockPos().getZ());
             mimic.generateColors();
             mimic.generateLimbScales();
+            mimic.setModelScale(Mth.nextFloat(level.getRandom(), 0.85f, 1.2f));
             level.addFreshEntity(mimic);
             level.destroyBlock(this.getBlockPos(), false);
         }

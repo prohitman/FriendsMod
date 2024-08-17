@@ -65,9 +65,7 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
     public void render(T pEntity, float pEntityYaw, float pPartialTicks, PoseStack pPoseStack, MultiBufferSource pBuffer, int pPackedLight) {
         if(DefaultPlayerSkin.get(pEntity.getPlayerUuid().get()).model() == PlayerSkin.Model.SLIM){
             slim.render(pEntity, pEntityYaw, pPartialTicks, pPoseStack, pBuffer, pPackedLight);
-        }
-/*        if ((pEntity.getUUID().getLeastSignificantBits() & 1) == 0) {
-        }*/ else {
+        } else {
             wide.render(pEntity, pEntityYaw, pPartialTicks, pPoseStack, pBuffer, pPackedLight);
         }
 /*        List<? extends String> displayNames = Config.SERVER.names.get();

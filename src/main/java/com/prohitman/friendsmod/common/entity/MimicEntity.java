@@ -28,6 +28,8 @@ public class MimicEntity extends Mob {
     public static final EntityDataAccessor<Float> RLEG_SCALE = SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.FLOAT);
     public static final EntityDataAccessor<Float> LLEG_SCALE = SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.FLOAT);
 
+    public static final EntityDataAccessor<Float> SCALE = SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.FLOAT);
+
     public void setPlayerUuid(UUID uuid){
         this.entityData.set(PLAYER_UUID, Optional.of(uuid));
     }
@@ -57,6 +59,13 @@ public class MimicEntity extends Mob {
         return this.entityData.get(BLUE_DIFF);
     }
 
+    public void setModelScale(float scale){
+        this.entityData.set(SCALE, scale);
+    }
+    public float getModelScale(){
+        return this.entityData.get(SCALE);
+    }
+
     public MimicEntity(Level level) {
         super(ModEntityTypes.MIMIC.get(), level);
         this.xpReward = 5;
@@ -79,13 +88,28 @@ public class MimicEntity extends Mob {
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
         this.generateColors();
         this.generateLimbScales();
+        this.setModelScale(Mth.nextFloat(level.getRandom(), 0.85f, 1.2f));
         return super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
     }
 
     public void generateColors(){
-        this.setRedDiff(this.random.nextInt(0, 55));
-        this.setGreenDiff(this.random.nextInt(0, 55));
-        this.setBlueDiff(this.random.nextInt(0, 55));
+        this.setRedDiff(this.random.nextInt(0, 25));
+        this.setGreenDiff(this.random.nextInt(0, 25));
+        this.setBlueDiff(this.random.nextInt(0, 25));
+
+        if(this.getRedDiff() >= this.getGreenDiff() && this.getRedDiff() >= this.getBlueDiff()){
+            this.setGreenDiff(this.getRedDiff());
+            this.setBlueDiff(this.getRedDiff());
+            this.setRedDiff(0);
+        } else if(this.getBlueDiff() >= this.getGreenDiff() && this.getBlueDiff() >= this.getRedDiff()){
+            this.setGreenDiff(this.getBlueDiff());
+            this.setRedDiff(this.getBlueDiff());
+            this.setBlueDiff(0);
+        } else if(this.getGreenDiff() >= this.getRedDiff() && this.getGreenDiff() >= this.getBlueDiff()){
+            this.setRedDiff(this.getGreenDiff());
+            this.setBlueDiff(this.getGreenDiff());
+            this.setGreenDiff(0);
+        }
     }
 
     public void generateLimbScales(){
@@ -106,11 +130,14 @@ public class MimicEntity extends Mob {
         builder.define(LARM_SCALE, 0f);
         builder.define(RLEG_SCALE, 0f);
         builder.define(LLEG_SCALE, 0f);
+        builder.define(SCALE, 1f);
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
+        this.setModelScale(compound.getFloat("scale"));
+
         this.setRedDiff(compound.getInt("red_diff"));
         this.setGreenDiff(compound.getInt("green_diff"));
         this.setBlueDiff(compound.getInt("blue_diff"));
@@ -129,6 +156,8 @@ public class MimicEntity extends Mob {
     @Override
     public void addAdditionalSaveData(CompoundTag compound) {
         super.addAdditionalSaveData(compound);
+        compound.putFloat("scale", this.getModelScale());
+
         compound.putInt("red_diff", this.getRedDiff());
         compound.putInt("green_diff", this.getGreenDiff());
         compound.putInt("blue_diff", this.getBlueDiff());
@@ -141,6 +170,11 @@ public class MimicEntity extends Mob {
         if(this.getPlayerUuid().isPresent()){
             compound.putUUID("player_uuid", this.getPlayerUuid().get());
         }
+    }
+
+    @Override
+    public float getScale() {
+        return this.getModelScale();
     }
 
     @Override
