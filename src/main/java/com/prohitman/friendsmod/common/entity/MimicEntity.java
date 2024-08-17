@@ -88,14 +88,14 @@ public class MimicEntity extends Mob {
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
         this.generateColors();
         this.generateLimbScales();
-        this.setModelScale(Mth.nextFloat(level.getRandom(), 0.85f, 1.2f));
+        this.setModelScale(Mth.nextFloat(level.getRandom(), 0.85f, 1.05f));
         return super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
     }
 
     public void generateColors(){
-        this.setRedDiff(this.random.nextInt(0, 25));
-        this.setGreenDiff(this.random.nextInt(0, 25));
-        this.setBlueDiff(this.random.nextInt(0, 25));
+        this.setRedDiff(this.random.nextInt(5, 25));
+        this.setGreenDiff(this.random.nextInt(5, 25));
+        this.setBlueDiff(this.random.nextInt(5, 25));
 
         if(this.getRedDiff() >= this.getGreenDiff() && this.getRedDiff() >= this.getBlueDiff()){
             this.setGreenDiff(this.getRedDiff());

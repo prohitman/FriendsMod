@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import java.util.concurrent.Executor;
 
 public class MimicPlantBlockEntity extends BlockEntity {
+    public boolean hasPlayer = false;
     @Nullable
     private ResolvableProfile owner;
     @Nullable
@@ -53,9 +54,12 @@ public class MimicPlantBlockEntity extends BlockEntity {
     public void tickServer(){
         assert level != null;
 
-        if(this.owner != null && this.level.random.nextInt(5) == 0){
-            System.out.println(this.owner.name());
-        }
+/*        if(this.level.random.nextInt(5) == 0){
+            if(this.owner != null){
+                System.out.println(this.owner.name());
+            }
+            System.out.println(this.hasPlayer);
+        }*/
 
         BlockState state = this.getBlockState();
 
@@ -67,7 +71,7 @@ public class MimicPlantBlockEntity extends BlockEntity {
             mimic.setPos(this.getBlockPos().getX(), this.getBlockPos().getY(), this.getBlockPos().getZ());
             mimic.generateColors();
             mimic.generateLimbScales();
-            mimic.setModelScale(Mth.nextFloat(level.getRandom(), 0.85f, 1.2f));
+            mimic.setModelScale(Mth.nextFloat(level.getRandom(), 0.85f, 1.05f));
             level.addFreshEntity(mimic);
             level.destroyBlock(this.getBlockPos(), false);
         }
@@ -82,6 +86,7 @@ public class MimicPlantBlockEntity extends BlockEntity {
         if (this.owner != null) {
             tag.put("profile", ResolvableProfile.CODEC.encodeStart(NbtOps.INSTANCE, this.owner).getOrThrow());
         }
+        tag.putBoolean("has_player", this.hasPlayer);
     }
 
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
@@ -91,6 +96,8 @@ public class MimicPlantBlockEntity extends BlockEntity {
                 LOGGER.error("Failed to load profile from player: {}", p_332637_);
             }).ifPresent(this::setOwner);
         }
+
+        this.hasPlayer = tag.getBoolean("has_player");
     }
 
     public @NotNull CompoundTag getUpdateTag(HolderLookup.Provider registries) {

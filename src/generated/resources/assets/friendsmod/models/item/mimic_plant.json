@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "friendsmod:block/mimic_plant_stage2"
+  }
+}

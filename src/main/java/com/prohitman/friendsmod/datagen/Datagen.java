@@ -2,6 +2,8 @@ package com.prohitman.friendsmod.datagen;
 
 import com.prohitman.friendsmod.FriendsMod;
 import com.prohitman.friendsmod.core.ModBlocks;
+import com.prohitman.friendsmod.core.ModEntityTypes;
+import com.prohitman.friendsmod.core.ModItems;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
@@ -38,10 +40,12 @@ public class Datagen {
         //generator.addProvider(event.includeServer(), new LootTableProvider(packOutput, Set.of(), entries, lookupProvider));
         //generator.addProvider(event.includeServer(), new ModGlobalLootModifierGen(packOutput, lookupProvider));
 
-        //generator.addProvider(event.includeClient(), new ModBlockStateGen(packOutput, fileHelper));
-        //generator.addProvider(event.includeClient(), new ModItemModelGen(packOutput, fileHelper));
+        generator.addProvider(event.includeClient(), new ModBlockStateGen(packOutput, fileHelper));
+        generator.addProvider(event.includeClient(), new ModItemModelGen(packOutput, fileHelper));
         generator.addProvider(event.includeClient(), new ModLangGen(packOutput, "en_us", languageProvider -> {
             languageProvider.add(ModBlocks.MIMIC_PLANT.get(), "Mimic Plant");
+            languageProvider.add(ModItems.MIMIC_SPAWN_EGG.get(), "Mimic Spawn Egg");
+            languageProvider.add(ModEntityTypes.MIMIC.get(), "Mimic");
             languageProvider.add("item.friendsmod.mimic_plant", "Mimic Plant");
         }));
     }

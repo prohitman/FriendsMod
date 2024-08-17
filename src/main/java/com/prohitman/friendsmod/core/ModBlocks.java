@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 public class ModBlocks {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(FriendsMod.MODID);
 
-    public static final DeferredBlock<?> MIMIC_PLANT = createRegistry("mimic_plant", () -> new MimicPlant(BlockBehaviour.Properties.of()
+    public static final DeferredBlock<Block> MIMIC_PLANT = createRegistry("mimic_plant", () -> new MimicPlant(BlockBehaviour.Properties.of()
             .offsetType(BlockBehaviour.OffsetType.XZ)
             .mapColor(MapColor.PLANT)
             .randomTicks()
@@ -25,8 +25,8 @@ public class ModBlocks {
             .sound(SoundType.SWEET_BERRY_BUSH)
             .pushReaction(PushReaction.DESTROY)), new Item.Properties());
 
-    public static <T extends Block> DeferredBlock<?> createRegistry(String name, Supplier<T> block, Item.Properties properties) {
-        DeferredBlock<?> object = BLOCKS.register(name, block);
+    public static <T extends Block> DeferredBlock<Block> createRegistry(String name, Supplier<T> block, Item.Properties properties) {
+        DeferredBlock<Block> object = BLOCKS.register(name, block);
         ModItems.ITEMS.register(name, () -> new BlockItem(object.get(), properties));
 
         return object;

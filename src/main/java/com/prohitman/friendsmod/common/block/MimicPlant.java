@@ -74,7 +74,10 @@ public class MimicPlant extends BushBlock implements BonemealableBlock, EntityBl
                     entity.hurt(level.damageSources().cactus(), 1.0F);
                     if(entity instanceof Player player){
                         if(level.getBlockEntity(pos) instanceof MimicPlantBlockEntity blockEntity){
-                            blockEntity.setOwner(new ResolvableProfile(player.getGameProfile()));
+                            if(!blockEntity.hasPlayer){
+                                blockEntity.setOwner(new ResolvableProfile(player.getGameProfile()));
+                                blockEntity.hasPlayer = true;
+                            }
                         }
                     }
                 }
