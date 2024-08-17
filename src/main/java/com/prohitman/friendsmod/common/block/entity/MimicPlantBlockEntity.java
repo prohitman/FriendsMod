@@ -59,14 +59,15 @@ public class MimicPlantBlockEntity extends BlockEntity {
 
         BlockState state = this.getBlockState();
 
-        if(state.getValue(BlockStateProperties.AGE_4) == 4 && !this.isRemoved() && this.level.random.nextInt(10) == 0 && this.owner != null && !this.level.isClientSide){
-            System.out.println("INitiate");
+        if(state.getValue(BlockStateProperties.AGE_4) == 4 && !this.isRemoved()
+                && this.level.random.nextInt(10) == 0 && this.owner != null
+                && !this.level.isClientSide){
             MimicEntity mimic = new MimicEntity(level);
             mimic.setPlayerUuid(this.getOwner().id().get());
             mimic.setPos(this.getBlockPos().getX(), this.getBlockPos().getY(), this.getBlockPos().getZ());
+            mimic.generateColors();
             level.addFreshEntity(mimic);
-            level.removeBlock(this.getBlockPos(), false);
-            System.out.println("Spawned Entity");
+            level.destroyBlock(this.getBlockPos(), false);
         }
     }
 

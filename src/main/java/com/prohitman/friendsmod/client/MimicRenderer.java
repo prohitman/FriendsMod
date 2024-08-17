@@ -1,51 +1,49 @@
 package com.prohitman.friendsmod.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.prohitman.friendsmod.common.entity.MimicEntity;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidArmorModel;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.ArrowLayer;
+import net.minecraft.client.renderer.entity.layers.EyesLayer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
+import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FastColor;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.client.event.RenderLivingEvent;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.Tags;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Iterator;
 import java.util.List;
 
 public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T, PlayerModel<T>> {
-/*    private static final ResourceLocation BUILDER_TEXTURE = AmbientPlayers.id("textures/entity/ambient_player/builder.png");
-    // These are set up this way in case any of the skins need to be removed individually due to model incompatibility
-    private static final List<ResourceLocation> WIDE_SKINS = Util.make(new ObjectArrayList<>(), list -> {
-        for (PlayerSkin skinType : DefaultPlayerSkin.DEFAULT_SKINS) {
-            if (skinType.model() == PlayerSkin.Model.WIDE) {
-                list.add(skinType.texture());
-            }
-        }
-        list.add(AmbientPlayers.id("textures/entity/ambient_player/agent.png"));
-    });
-    private static final List<ResourceLocation> SLIM_SKINS = Util.make(new ObjectArrayList<>(), list -> {
-        for (PlayerSkin skinType : DefaultPlayerSkin.DEFAULT_SKINS) {
-            if (skinType.model() == PlayerSkin.Model.SLIM) {
-                list.add(skinType.texture());
-            }
-        }
-        list.add(AmbientPlayers.id("textures/entity/ambient_player/agent.png"));
-    });*/
     private static Deferred wide;
     private static Deferred slim;
 
@@ -63,9 +61,11 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
 
     @Override
     public void render(T pEntity, float pEntityYaw, float pPartialTicks, PoseStack pPoseStack, MultiBufferSource pBuffer, int pPackedLight) {
-        if ((pEntity.getUUID().getLeastSignificantBits() & 1) == 0) {
+        if(DefaultPlayerSkin.get(pEntity.getPlayerUuid().get()).model() == PlayerSkin.Model.SLIM){
             slim.render(pEntity, pEntityYaw, pPartialTicks, pPoseStack, pBuffer, pPackedLight);
-        } else {
+        }
+/*        if ((pEntity.getUUID().getLeastSignificantBits() & 1) == 0) {
+        }*/ else {
             wide.render(pEntity, pEntityYaw, pPartialTicks, pPoseStack, pBuffer, pPackedLight);
         }
 /*        List<? extends String> displayNames = Config.SERVER.names.get();
@@ -98,9 +98,103 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
         }
 
         @Override
-        public void render(MimicEntity pEntity, float pEntityYaw, float pPartialTicks, PoseStack pPoseStack, MultiBufferSource pBuffer, int pPackedLight) {
-            setupPoses(pEntity, getModel());
-            super.render(pEntity, pEntityYaw, pPartialTicks, pPoseStack, pBuffer, pPackedLight);
+        public void render(MimicEntity entity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
+            setupPoses(entity, getModel());
+            super.render(entity, entityYaw, partialTicks, poseStack, buffer, packedLight);
+            poseStack.pushPose();
+            this.model.attackTime = this.getAttackAnim(entity, partialTicks);
+            boolean shouldSit = entity.isPassenger() && entity.getVehicle() != null && entity.getVehicle().shouldRiderSit();
+            this.model.riding = shouldSit;
+            this.model.young = entity.isBaby();
+            float f = Mth.rotLerp(partialTicks, entity.yBodyRotO, entity.yBodyRot);
+            float f1 = Mth.rotLerp(partialTicks, entity.yHeadRotO, entity.yHeadRot);
+            float f2 = f1 - f;
+            float f7;
+            if (shouldSit) {
+                Entity var12 = entity.getVehicle();
+                if (var12 instanceof LivingEntity) {
+                    LivingEntity livingentity = (LivingEntity)var12;
+                    f = Mth.rotLerp(partialTicks, livingentity.yBodyRotO, livingentity.yBodyRot);
+                    f2 = f1 - f;
+                    f7 = Mth.wrapDegrees(f2);
+                    if (f7 < -85.0F) {
+                        f7 = -85.0F;
+                    }
+
+                    if (f7 >= 85.0F) {
+                        f7 = 85.0F;
+                    }
+
+                    f = f1 - f7;
+                    if (f7 * f7 > 2500.0F) {
+                        f += f7 * 0.2F;
+                    }
+
+                    f2 = f1 - f;
+                }
+            }
+
+            float f6 = Mth.lerp(partialTicks, entity.xRotO, entity.getXRot());
+            if (isEntityUpsideDown(entity)) {
+                f6 *= -1.0F;
+                f2 *= -1.0F;
+            }
+
+            f2 = Mth.wrapDegrees(f2);
+            float f9;
+            if (entity.hasPose(Pose.SLEEPING)) {
+                Direction direction = entity.getBedOrientation();
+                if (direction != null) {
+                    f9 = entity.getEyeHeight(Pose.STANDING) - 0.1F;
+                    poseStack.translate((float)(-direction.getStepX()) * f9, 0.0F, (float)(-direction.getStepZ()) * f9);
+                }
+            }
+
+            f7 = entity.getScale();
+            poseStack.scale(f7, f7, f7);
+            f9 = this.getBob(entity, partialTicks);
+            this.setupRotations(entity, poseStack, f9, f, partialTicks, f7);
+            poseStack.scale(-1.0F, -1.0F, 1.0F);
+            this.scale(entity, poseStack, partialTicks);
+            poseStack.translate(0.0F, -1.501F, 0.0F);
+            float f4 = 0.0F;
+            float f5 = 0.0F;
+            if (!shouldSit && entity.isAlive()) {
+                f4 = entity.walkAnimation.speed(partialTicks);
+                f5 = entity.walkAnimation.position(partialTicks);
+                if (entity.isBaby()) {
+                    f5 *= 3.0F;
+                }
+
+                if (f4 > 1.0F) {
+                    f4 = 1.0F;
+                }
+            }
+
+            this.model.prepareMobModel(entity, f5, f4, partialTicks);
+            this.model.setupAnim(entity, f5, f4, f9, f2, f6);
+            Minecraft minecraft = Minecraft.getInstance();
+            boolean flag = this.isBodyVisible(entity);
+            boolean flag1 = !flag && !entity.isInvisibleTo(minecraft.player);
+            boolean flag2 = minecraft.shouldEntityAppearGlowing(entity);
+            RenderType rendertype = this.getRenderType(entity, flag, flag1, flag2);
+            if (rendertype != null) {
+                VertexConsumer vertexconsumer = buffer.getBuffer(rendertype);
+                int i = getOverlayCoords(entity, this.getWhiteOverlayProgress(entity, partialTicks));
+                this.model.renderToBuffer(poseStack, vertexconsumer, packedLight, i, flag1 ? 654311423 :
+                        FastColor.ARGB32.color(255,255 - entity.getRedDiff(),255 - entity.getGreenDiff(), 255 - entity.getBlueDiff()));
+            }
+
+            if (!entity.isSpectator()) {
+                Iterator var26 = this.layers.iterator();
+
+                while(var26.hasNext()) {
+                    RenderLayer<MimicEntity, PlayerModel<MimicEntity>> renderlayer = (RenderLayer)var26.next();
+                    renderlayer.render(poseStack, buffer, packedLight, entity, f5, f4, partialTicks, f9, f2, f6);
+                }
+            }
+
+            poseStack.popPose();
         }
 
         public static void setupPoses(MimicEntity entity, PlayerModel<MimicEntity> model) {
