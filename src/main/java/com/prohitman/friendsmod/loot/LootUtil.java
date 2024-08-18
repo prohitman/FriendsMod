@@ -42,6 +42,11 @@ public class LootUtil {
         return serverLevel.getServer().reloadableRegistries().getLootTable(ResourceKey.create(Registries.LOOT_TABLE, tableId));
     }
 
+    public static LootTable getSpawnWithLootTable(ServerLevel serverLevel, Entity entity, String name) {
+        var tableId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).withPrefix("spawn_with/").withSuffix(name);
+        return serverLevel.getServer().reloadableRegistries().getLootTable(ResourceKey.create(Registries.LOOT_TABLE, tableId));
+    }
+
     public static LootContext createSpawnWithContext(ServerLevel serverLevel, Entity entity, LootTable lootTable) {
         LootParams params = new LootParams.Builder(serverLevel)
                 .withParameter(LootContextParams.ORIGIN, entity.position())

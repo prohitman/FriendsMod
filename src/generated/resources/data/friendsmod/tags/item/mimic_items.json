@@ -2,17 +2,14 @@
   "values": [
     "#friendsmod:mimic_block_items",
     "#minecraft:meat",
-    "#minecraft:fishes",
+    "minecraft:apple",
     "minecraft:feather",
     "minecraft:leather",
     "minecraft:stick",
     "minecraft:wheat_seeds",
     "minecraft:dead_bush",
-    "#minecraft:flowers",
-    "minecraft:wooden_axe",
-    "minecraft:wooden_pickaxe",
-    "minecraft:wooden_hoe",
-    "minecraft:wooden_shovel",
-    "minecraft:wooden_sword"
+    "minecraft:poppy",
+    "minecraft:dandelion",
+    "minecraft:oxeye_daisy"
   ]
 }

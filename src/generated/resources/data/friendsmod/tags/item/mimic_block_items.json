@@ -1,7 +1,8 @@
 {
   "values": [
-    "#minecraft:oak_logs",
-    "#minecraft:dirt",
+    "minecraft:oak_planks",
+    "minecraft:oak_log",
+    "minecraft:dirt",
     "minecraft:gravel",
     "minecraft:sand",
     "minecraft:cobblestone",

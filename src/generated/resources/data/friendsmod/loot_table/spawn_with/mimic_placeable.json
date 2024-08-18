@@ -1,0 +1,20 @@
+{
+  "type": "friendsmod:entity_spawn_with",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:loot_table",
+          "value": "friendsmod:spawn_with/common/random_mimic_block_items"
+        },
+        {
+          "type": "minecraft:empty"
+        }
+      ],
+      "name": "mimic_placeable",
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "friendsmod:spawn_with/mimic_placeable"
+}

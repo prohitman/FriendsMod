@@ -1,0 +1,21 @@
+{
+  "type": "friendsmod:entity_spawn_with",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "friendsmod:any_item",
+          "filters": [
+            {
+              "items": "#friendsmod:mimic_block_items"
+            }
+          ]
+        }
+      ],
+      "name": "base",
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "friendsmod:spawn_with/common/random_mimic_block_items"
+}

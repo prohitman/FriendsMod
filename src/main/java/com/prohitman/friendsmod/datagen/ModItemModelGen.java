@@ -31,8 +31,4 @@ public class ModItemModelGen extends ItemModelProvider {
         String path = BuiltInRegistries.ITEM.getKey(item.get()).getPath();
         return withExistingParent(path, mcLoc("item/template_spawn_egg"));
     }
-
-/*    protected ItemModelBuilder mimicPlant(Supplier<Block> blockSupplier){
-
-    }*/
 }

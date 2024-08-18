@@ -38,6 +38,8 @@ import org.jetbrains.annotations.Nullable;
 public class MimicPlant extends BushBlock implements BonemealableBlock, EntityBlock {
     public static final MapCodec<MimicPlant> CODEC = simpleCodec(MimicPlant::new);
     public static final IntegerProperty AGE = BlockStateProperties.AGE_4;
+    public static final VoxelShape SMALL_SHAPE =  Block.box(5.0, 0.0, 5.0, 11.0, 10.0, 11.0);
+    public static final VoxelShape BIG_SHAPE =  Block.box(1.0, 0.0, 1.0, 15.0, 16.0, 15.0);
 
     public MimicPlant(BlockBehaviour.Properties properties) {
         super(properties);
@@ -71,7 +73,9 @@ public class MimicPlant extends BushBlock implements BonemealableBlock, EntityBl
                 double d0 = Math.abs(entity.getX() - entity.xOld);
                 double d1 = Math.abs(entity.getZ() - entity.zOld);
                 if (d0 >= 0.003000000026077032 || d1 >= 0.003000000026077032) {
-                    entity.hurt(level.damageSources().cactus(), 1.0F);
+                    if(!(entity instanceof MimicEntity)){
+                        entity.hurt(level.damageSources().cactus(), 1.0F);
+                    }
                     if(entity instanceof Player player){
                         if(level.getBlockEntity(pos) instanceof MimicPlantBlockEntity blockEntity){
                             if(!blockEntity.hasPlayer && !player.isCreative() && !player.isSpectator()){
@@ -132,6 +136,13 @@ public class MimicPlant extends BushBlock implements BonemealableBlock, EntityBl
     @Override
     protected @NotNull VoxelShape getShape(BlockState pState, @NotNull BlockGetter pLevel, @NotNull BlockPos pPos, @NotNull CollisionContext pContext) {
         Vec3 vec3 = pState.getOffset(pLevel, pPos);
-        return Block.box(0,0,0,16, 16,16).move(vec3.x, vec3.y, vec3.z);
+        BlockState state = pLevel.getBlockState(pPos);
+        VoxelShape shape;
+        if(state.getValue(AGE) <= 2){
+            shape = SMALL_SHAPE;
+        } else {
+            shape = BIG_SHAPE;
+        }
+        return shape.move(vec3.x, vec3.y, vec3.z);
     }
 }

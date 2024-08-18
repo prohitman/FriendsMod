@@ -1,5 +1,6 @@
 package com.prohitman.friendsmod.common.entity;
 
+import com.prohitman.friendsmod.common.entity.goals.PlaceBlockGoal;
 import com.prohitman.friendsmod.core.ModEntityTypes;
 import com.prohitman.friendsmod.loot.LootUtil;
 import net.minecraft.nbt.CompoundTag;
@@ -97,6 +98,7 @@ public class MimicEntity extends PathfinderMob {
         this.goalSelector.addGoal(2, new RandomLookAroundGoal(this));
         this.goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, 6));
         this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 1));
+        this.goalSelector.addGoal(8, new PlaceBlockGoal(this));
 
         this.targetSelector.addGoal(7, new NearestAttackableTargetGoal<>(this, Animal.class, 10, true, true, MIMIC_TARGETS));
     }
@@ -146,9 +148,9 @@ public class MimicEntity extends PathfinderMob {
     }
 
     public void generateColors(){
-        this.setRedDiff(this.random.nextInt(5, 25));
-        this.setGreenDiff(this.random.nextInt(5, 25));
-        this.setBlueDiff(this.random.nextInt(5, 25));
+        this.setRedDiff(this.random.nextInt(5, 50));
+        this.setGreenDiff(this.random.nextInt(5, 50));
+        this.setBlueDiff(this.random.nextInt(5, 50));
 
         if(this.getRedDiff() >= this.getGreenDiff() && this.getRedDiff() >= this.getBlueDiff()){
             this.setGreenDiff(this.getRedDiff());

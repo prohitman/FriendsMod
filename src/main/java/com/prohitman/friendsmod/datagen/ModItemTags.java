@@ -18,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
 public class ModItemTags extends ItemTagsProvider {
     public static final TagKey<Item> MIMIC_ITEMS = create("mimic_items");
     public static final TagKey<Item> MIMIC_BLOCK_ITEMS = create("mimic_block_items");
+    public static final TagKey<Item> WOODEN_TOOLS = create("wooden_tools");
 
     public ModItemTags(PackOutput pOutput, CompletableFuture<HolderLookup.Provider> pLookupProvider, @Nullable ExistingFileHelper existingFileHelper) {
         super(pOutput, pLookupProvider, CompletableFuture.completedFuture(TagLookup.empty()), FriendsMod.MODID, existingFileHelper);
@@ -25,28 +26,34 @@ public class ModItemTags extends ItemTagsProvider {
 
     @Override
     protected void addTags(HolderLookup.Provider provider) {
-        tag(MIMIC_ITEMS).addTags(MIMIC_BLOCK_ITEMS)
+        tag(MIMIC_ITEMS)
+                .addTags(MIMIC_BLOCK_ITEMS)
                 .addTags(ItemTags.MEAT)
-                .addTags(ItemTags.FISHES)
+                .add(Items.APPLE)
                 .add(Items.FEATHER)
                 .add(Items.LEATHER)
                 .add(Items.STICK)
                 .add(Items.WHEAT_SEEDS)
                 .add(Items.DEAD_BUSH)
-                .addTags(ItemTags.FLOWERS)
-                .add(Items.WOODEN_AXE)
-                .add(Items.WOODEN_PICKAXE)
-                .add(Items.WOODEN_HOE)
-                .add(Items.WOODEN_SHOVEL)
-                .add(Items.WOODEN_SWORD);
+                .add(Items.POPPY)
+                .add(Items.DANDELION)
+                .add(Items.AZURE_BLUET);
 
-        tag(MIMIC_BLOCK_ITEMS).addTags(ItemTags.OAK_LOGS)
-                .addTags(ItemTags.DIRT)
+        tag(MIMIC_BLOCK_ITEMS)
+                .add(Items.OAK_PLANKS)
+                .add(Items.OAK_LOG)
+                .add(Items.DIRT)
                 .add(Items.GRAVEL)
                 .add(Items.SAND)
                 .add(Items.COBBLESTONE)
                 .add(Items.CRAFTING_TABLE);
 
+        tag(WOODEN_TOOLS)
+                .add(Items.WOODEN_AXE)
+                .add(Items.WOODEN_PICKAXE)
+                .add(Items.WOODEN_HOE)
+                .add(Items.WOODEN_SHOVEL)
+                .add(Items.WOODEN_SWORD);
     }
 
     private static TagKey<Item> create(String tag) {

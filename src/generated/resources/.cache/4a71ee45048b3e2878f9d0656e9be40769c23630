@@ -1,3 +1,4 @@
-// 1.21	2024-08-18T15:46:15.2359942	Tags for minecraft:item mod id friendsmod
-4bdcbeb810f947a7f4a711d9873fa53467f25e12 data/friendsmod/tags/item/mimic_block_items.json
-152c161c592635d7298864da849293eb818ae699 data/friendsmod/tags/item/mimic_items.json
+// 1.21	2024-08-18T20:48:18.1091288	Tags for minecraft:item mod id friendsmod
+967a858f661c147e41f7ffa31f3d7487ff8c3812 data/friendsmod/tags/item/mimic_block_items.json
+1fc7388c4f7eded5de3cdd23f2ae7f621241345b data/friendsmod/tags/item/mimic_items.json
+780c6ce5193d98a9fcf627088e4d8bd0318c018c data/friendsmod/tags/item/wooden_tools.json

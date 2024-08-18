@@ -11,7 +11,16 @@
               "items": "#friendsmod:mimic_items"
             }
           ],
-          "weight": 1335
+          "weight": 2
+        },
+        {
+          "type": "friendsmod:any_item",
+          "filters": [
+            {
+              "items": "#friendsmod:wooden_tools"
+            }
+          ],
+          "weight": 3
         }
       ],
       "name": "base",

@@ -1,3 +1,5 @@
-// 1.21	2024-08-18T15:46:15.2349937	Loot Tables
-235bfd8b11d6d7bdb4213754e56d0470545fa5c8 data/friendsmod/loot_table/spawn_with/common/random_mimic_items.json
+// 1.21	2024-08-18T22:03:49.7929594	Loot Tables
+5d15f9e0d99b819bed3e0052a7c1f876fee55d5e data/friendsmod/loot_table/spawn_with/common/random_mimic_block_items.json
+8bcef3ff1174a9d3fd4b326bcd97a96034f2bdb3 data/friendsmod/loot_table/spawn_with/common/random_mimic_items.json
 a3429a75674101ca6688910f9942ba00e6ce4669 data/friendsmod/loot_table/spawn_with/mimic.json
+80963eea16e0309251ff7b11671e2a7d15f69c20 data/friendsmod/loot_table/spawn_with/mimic_placeable.json
