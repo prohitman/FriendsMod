@@ -17,7 +17,7 @@
       "uvlock": true
     },
     "age=4": {
-      "model": "friendsmod:block/mimic_plant_stage0",
+      "model": "friendsmod:block/mimic_plant_stage3",
       "uvlock": true
     }
   }

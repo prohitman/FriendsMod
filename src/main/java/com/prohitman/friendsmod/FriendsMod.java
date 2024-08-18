@@ -1,5 +1,6 @@
 package com.prohitman.friendsmod;
 
+import com.mojang.logging.LogUtils;
 import com.prohitman.friendsmod.common.entity.MimicEntity;
 import com.prohitman.friendsmod.core.ModBlockEntities;
 import com.prohitman.friendsmod.core.ModBlocks;
@@ -7,16 +8,13 @@ import com.prohitman.friendsmod.core.ModEntityTypes;
 import com.prohitman.friendsmod.core.ModItems;
 import com.prohitman.friendsmod.loot.ModLootContextParamSets;
 import com.prohitman.friendsmod.loot.ModLootPoolEntryTypes;
-import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
-import org.slf4j.Logger;
-
-import com.mojang.logging.LogUtils;
-
 import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import org.slf4j.Logger;
 
 @Mod(FriendsMod.MODID)
 public class FriendsMod
@@ -34,7 +32,6 @@ public class FriendsMod
 
         ModLootContextParamSets.bootstrap();
 
-        modEventBus.addListener(this::addCreative);
         modEventBus.addListener(this::addDefaultAttributes);
 
         //modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
@@ -42,13 +39,5 @@ public class FriendsMod
 
     private void addDefaultAttributes(EntityAttributeCreationEvent event) {
         event.put(ModEntityTypes.MIMIC.get(), MimicEntity.createAttributes().build());
-    }
-
-    private void addCreative(BuildCreativeModeTabContentsEvent event)
-    {
-        if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS){
-
-        }
-            //event.accept(EXAMPLE_BLOCK_ITEM);
     }
 }

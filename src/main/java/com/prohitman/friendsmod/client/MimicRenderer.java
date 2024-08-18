@@ -3,28 +3,21 @@ package com.prohitman.friendsmod.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.prohitman.friendsmod.common.entity.MimicEntity;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidArmorModel;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelLayers;
-import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.ArrowLayer;
-import net.minecraft.client.renderer.entity.layers.EyesLayer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
-import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
@@ -34,16 +27,11 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.client.event.RenderLivingEvent;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
-import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.Tags;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.joml.Vector3f;
 
 import java.util.Iterator;
-import java.util.List;
 
 public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T, PlayerModel<T>> {
     private static Deferred wide;
@@ -76,7 +64,6 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
 
     @Override
     public @NotNull ResourceLocation getTextureLocation(MimicEntity pEntity) {
-        //return DefaultPlayerSkin.getDefaultTexture();
         return DefaultPlayerSkin.get(pEntity.getPlayerUuid().get()).texture();
     }
 

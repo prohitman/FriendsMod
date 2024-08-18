@@ -17,7 +17,10 @@ import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.BonemealableBlock;
+import net.minecraft.world.level.block.BushBlock;
+import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -109,7 +112,7 @@ public class MimicPlant extends BushBlock implements BonemealableBlock, EntityBl
     }
 
     public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state) {
-        int i = Math.min(4, state.getValue(AGE) + 1);//3
+        int i = Math.min(4, state.getValue(AGE) + 1);
         level.setBlock(pos, state.setValue(AGE, i), 2);
     }
 

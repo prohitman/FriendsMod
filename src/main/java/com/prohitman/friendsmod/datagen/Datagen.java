@@ -9,9 +9,6 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.loot.LootTableProvider;
-import net.minecraft.data.tags.TagsProvider;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
@@ -31,15 +28,6 @@ public class Datagen {
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
         ExistingFileHelper fileHelper = event.getExistingFileHelper();
 
-/*        CompletableFuture<TagsProvider.TagLookup<Block>> tagLookup = generator.addProvider(event.includeServer(), new ModBlockTagGen(packOutput, lookupProvider, fileHelper)).contentsGetter();
-        generator.addProvider(event.includeServer(), new ModItemTagGen(packOutput, lookupProvider, tagLookup, fileHelper));
-        List<LootTableProvider.SubProviderEntry> entries = List.of(
-                new LootTableProvider.SubProviderEntry(ModBlockLootGen::new, LootContextParamSets.BLOCK),
-                new LootTableProvider.SubProviderEntry(ModPrizeLootGen::new, LootContextParamSets.BLOCK),
-                new LootTableProvider.SubProviderEntry(ModInjectedLootGen::new, LootContextParamSets.CHEST)
-        );*/
-        //generator.addProvider(event.includeServer(), new LootTableProvider(packOutput, Set.of(), entries, lookupProvider));
-        //generator.addProvider(event.includeServer(), new ModGlobalLootModifierGen(packOutput, lookupProvider));
         generator.addProvider(event.includeServer(), new LootTableProvider(packOutput, Set.of(), List.of(new LootTableProvider.SubProviderEntry(SpawnWithLootTableSubProvider::new, ModLootContextParamSets.SPAWN_WITH)), lookupProvider));
         generator.addProvider(event.includeServer(), new ModItemTags(packOutput, lookupProvider, fileHelper));
 

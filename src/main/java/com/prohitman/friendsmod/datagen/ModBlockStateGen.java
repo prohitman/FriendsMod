@@ -21,8 +21,8 @@ public class ModBlockStateGen extends BlockStateProvider {
 
     private void createBerryBush(){
         getVariantBuilder(ModBlocks.MIMIC_PLANT.get()).forAllStatesExcept(state -> {
-            ModelFile model = models().cross(ModBlocks.MIMIC_PLANT.getId().getPath() + "_stage" + 0,
-                    modLoc("block/" + ModBlocks.MIMIC_PLANT.getId().getPath() + "_stage" + 0)).renderType("cutout_mipped");
+            ModelFile model = models().cross(ModBlocks.MIMIC_PLANT.getId().getPath() + "_stage" + 3,
+                    modLoc("block/" + ModBlocks.MIMIC_PLANT.getId().getPath() + "_stage" + 3)).renderType("cutout_mipped");
             int i;
             for(i=0; i<4; i++){
                 if(state.getValue(MimicPlant.AGE) == i){

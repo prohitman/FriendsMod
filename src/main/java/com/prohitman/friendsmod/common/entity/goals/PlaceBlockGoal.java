@@ -26,7 +26,6 @@ import net.neoforged.neoforge.common.util.BlockSnapshot;
 import net.neoforged.neoforge.event.EventHooks;
 
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class PlaceBlockGoal extends Goal {
 

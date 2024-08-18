@@ -9,7 +9,6 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import org.jetbrains.annotations.Nullable;
 
@@ -58,13 +57,5 @@ public class ModItemTags extends ItemTagsProvider {
 
     private static TagKey<Item> create(String tag) {
         return ItemTags.create(ResourceLocation.fromNamespaceAndPath(FriendsMod.MODID, tag));
-    }
-
-    private static TagKey<Item> createNeoForgeTag(String tag) {
-        return ItemTags.create(ResourceLocation.fromNamespaceAndPath("neoforge", tag));
-    }
-
-    private static TagKey<Item> createCommonTag(String tag) {
-        return ItemTags.create(ResourceLocation.fromNamespaceAndPath("c", tag));
     }
 }
