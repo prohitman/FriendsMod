@@ -1,23 +1,37 @@
 package com.prohitman.friendsmod.common.entity;
 
 import com.prohitman.friendsmod.core.ModEntityTypes;
+import com.prohitman.friendsmod.loot.LootUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.util.DefaultRandomPos;
+import net.minecraft.world.entity.animal.*;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.PathFinder;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Predicate;
 
-public class MimicEntity extends Mob {
+public class MimicEntity extends PathfinderMob {
     private static final EntityDataAccessor<Optional<UUID>> PLAYER_UUID = SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.OPTIONAL_UUID);
     private static final EntityDataAccessor<Integer> RED_DIFF = SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> BLUE_DIFF = SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.INT);
@@ -66,6 +80,10 @@ public class MimicEntity extends Mob {
         return this.entityData.get(SCALE);
     }
 
+    public static final Predicate<LivingEntity> MIMIC_TARGETS = (livingEntity -> {
+       return livingEntity.getType().getCategory().isFriendly() && !(livingEntity instanceof NeutralMob) && !(livingEntity instanceof WaterAnimal);
+    });
+
     public MimicEntity(Level level) {
         super(ModEntityTypes.MIMIC.get(), level);
         this.xpReward = 5;
@@ -74,11 +92,19 @@ public class MimicEntity extends Mob {
     @Override
     protected void registerGoals() {
         super.registerGoals();
+        this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.3f, false));
+        this.goalSelector.addGoal(2, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, 6));
+        this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 1));
+
+        this.targetSelector.addGoal(7, new NearestAttackableTargetGoal<>(this, Animal.class, 10, true, true, MIMIC_TARGETS));
     }
 
     public static AttributeSupplier.Builder createAttributes() {
         return LivingEntity.createLivingAttributes()
                 .add(Attributes.FOLLOW_RANGE, 32)
+                .add(Attributes.MAX_HEALTH, 20)
                 .add(Attributes.ATTACK_DAMAGE, 1.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.2F);
     }
@@ -89,7 +115,34 @@ public class MimicEntity extends Mob {
         this.generateColors();
         this.generateLimbScales();
         this.setModelScale(Mth.nextFloat(level.getRandom(), 0.85f, 1.05f));
+        LootTable lootTable = LootUtil.getSpawnWithLootTable(level.getLevel(), this);
+        LootContext lootContext = LootUtil.createSpawnWithContext(level.getLevel(), this, lootTable);
+        LootUtil.generateSingleItem(lootTable, lootContext, EquipmentSlot.MAINHAND.getName()).ifPresent(itemStack -> setItemSlot(EquipmentSlot.MAINHAND, itemStack));
+
         return super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
+    }
+
+    @Override
+    public void aiStep() {
+        updateSwingTime();
+        super.aiStep();
+        List<Player> players = this.level().getEntitiesOfClass(Player.class, this.getBoundingBox().inflate(25.0D), EntitySelector.NO_CREATIVE_OR_SPECTATOR);
+
+        if(!players.isEmpty()){
+            for(Player player : players){
+                Vec3 vec3 = DefaultRandomPos.getPosAway(this, 16, 7, player.position());
+                if (vec3 != null && player.distanceToSqr(vec3.x, vec3.y, vec3.z) >= player.distanceToSqr(this)) {
+                    if(this.getNavigation().isDone()){
+                        Path path = this.getNavigation().createPath(vec3.x, vec3.y, vec3.z, 0);
+                        if(path != null){
+                            this.getNavigation().moveTo(path, 1.4);
+                            this.setAggressive(false);
+                            this.setTarget(null);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public void generateColors(){
@@ -180,5 +233,15 @@ public class MimicEntity extends Mob {
     @Override
     public boolean isLeashed() {
         return false;
+    }
+
+    @Override
+    public float maxUpStep() {
+        return this.getModelScale() > 1 ? 1 : super.maxUpStep();
+    }
+
+    @Override
+    public void checkDespawn() {
+        super.checkDespawn();
     }
 }

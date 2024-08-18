@@ -1,0 +1,10 @@
+{
+  "values": [
+    "#minecraft:oak_logs",
+    "#minecraft:dirt",
+    "minecraft:gravel",
+    "minecraft:sand",
+    "minecraft:cobblestone",
+    "minecraft:crafting_table"
+  ]
+}

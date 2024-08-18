@@ -3,6 +3,7 @@ package com.prohitman.friendsmod.common.block.entity;
 import com.mojang.logging.LogUtils;
 import com.prohitman.friendsmod.common.entity.MimicEntity;
 import com.prohitman.friendsmod.core.ModBlockEntities;
+import com.prohitman.friendsmod.loot.LootUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -14,7 +15,9 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Block;
@@ -22,6 +25,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.LootTable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.openjdk.nashorn.internal.objects.annotations.Getter;
@@ -72,6 +77,11 @@ public class MimicPlantBlockEntity extends BlockEntity {
             mimic.generateColors();
             mimic.generateLimbScales();
             mimic.setModelScale(Mth.nextFloat(level.getRandom(), 0.85f, 1.05f));
+
+            LootTable lootTable = LootUtil.getSpawnWithLootTable((ServerLevel) level, mimic);
+            LootContext lootContext = LootUtil.createSpawnWithContext((ServerLevel)level, mimic, lootTable);
+            LootUtil.generateSingleItem(lootTable, lootContext, EquipmentSlot.MAINHAND.getName()).ifPresent(itemStack -> mimic.setItemSlot(EquipmentSlot.MAINHAND, itemStack));
+
             level.addFreshEntity(mimic);
             level.destroyBlock(this.getBlockPos(), false);
         }

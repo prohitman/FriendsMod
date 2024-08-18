@@ -4,6 +4,7 @@ import com.prohitman.friendsmod.FriendsMod;
 import com.prohitman.friendsmod.core.ModBlocks;
 import com.prohitman.friendsmod.core.ModEntityTypes;
 import com.prohitman.friendsmod.core.ModItems;
+import com.prohitman.friendsmod.loot.ModLootContextParamSets;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
@@ -39,6 +40,8 @@ public class Datagen {
         );*/
         //generator.addProvider(event.includeServer(), new LootTableProvider(packOutput, Set.of(), entries, lookupProvider));
         //generator.addProvider(event.includeServer(), new ModGlobalLootModifierGen(packOutput, lookupProvider));
+        generator.addProvider(event.includeServer(), new LootTableProvider(packOutput, Set.of(), List.of(new LootTableProvider.SubProviderEntry(SpawnWithLootTableSubProvider::new, ModLootContextParamSets.SPAWN_WITH)), lookupProvider));
+        generator.addProvider(event.includeServer(), new ModItemTags(packOutput, lookupProvider, fileHelper));
 
         generator.addProvider(event.includeClient(), new ModBlockStateGen(packOutput, fileHelper));
         generator.addProvider(event.includeClient(), new ModItemModelGen(packOutput, fileHelper));
