@@ -52,6 +52,10 @@ public class PlaceBlockGoal extends Goal {
             BlockPos blockpos1 = blockpos.below();
             BlockState blockstate1 = level.getBlockState(blockpos1);
 
+            Vec3 vec = this.mimic.position();
+            Vec3 lookVec = new Vec3(blockpos.getX() - vec.x, blockpos.getY() - vec.y, blockpos.getZ() - vec.z);
+            this.mimic.getLookControl().setLookAt(lookVec);
+        
             ItemStack itemStack;
 
             LootTable lootTable = LootUtil.getSpawnWithLootTable((ServerLevel) this.mimic.level(), mimic, "_placeable");
