@@ -76,35 +76,11 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
 
         if (profile == null || !pEntity.getHasPlayer()) {
             playerSkin = DefaultPlayerSkin.get(pEntity.getPlayerUuid().get());
-            System.out.println("Profile null");
-            if(pEntity.getMimicName().isEmpty()){
-                //System.out.println("I dont have a name indeed");
-                pEntity.setMimicName(garbleName(pEntity.getName().getString(), pEntity.getRandom()));
-                pEntity.setHasName(true);
-            }
         } else {
             playerSkin = profile
                     .map(profileResult ->
                             Minecraft.getInstance().getSkinManager().getInsecureSkin(profileResult.profile()))
                     .orElseGet(() -> DefaultPlayerSkin.get(pEntity.getPlayerUuid().get()));
-
-            if(profile.isPresent()){
-                //name = profile.get().profile().getName();
-                //System.out.println("Profile Present");
-
-                if(pEntity.getMimicName().isEmpty()){
-                    pEntity.setMimicName(garbleName(profile.get().profile().getName(), pEntity.getRandom()));
-                    pEntity.setHasName(true);
-                }
-            } else {
-                //System.out.println("Profile not present");
-
-                playerSkin = DefaultPlayerSkin.get(pEntity.getPlayerUuid().get());
-                if(pEntity.getMimicName().isEmpty()){
-                    pEntity.setMimicName(garbleName(pEntity.getName().getString(), pEntity.getRandom()));
-                    pEntity.setHasName(true);
-                }
-            }
         }
 
         if(playerSkin.model() == PlayerSkin.Model.SLIM){
@@ -114,19 +90,6 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
         }
 
         renderNameTag(pEntity, Component.literal(pEntity.getMimicName()), pPoseStack, pBuffer, pPackedLight, pPartialTicks);
-    }
-
-    public static String garbleName(String name, RandomSource random) {
-        StringBuilder garbledName = new StringBuilder(name);
-
-        for (int i = 0; i < garbledName.length(); i++) {
-            if (random.nextInt(6) == 0) {
-                char newChar = (char) ('a' + random.nextInt(26));
-                garbledName.setCharAt(i, newChar);
-            }
-        }
-
-        return garbledName.toString();
     }
 
     @Override

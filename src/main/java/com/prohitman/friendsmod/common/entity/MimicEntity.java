@@ -8,6 +8,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -141,12 +142,26 @@ public class MimicEntity extends PathfinderMob {
         this.generateColors();
         this.generateLimbScales();
         this.setModelScale(Mth.nextFloat(level.getRandom(), 0.85f, 1.05f));
+        this.setMimicName(garbleName(this.getName().getString(), this.getRandom()));
 
         LootTable lootTable = LootUtil.getSpawnWithLootTable(level.getLevel(), this);
         LootContext lootContext = LootUtil.createSpawnWithContext(level.getLevel(), this, lootTable);
         LootUtil.generateSingleItem(lootTable, lootContext, EquipmentSlot.MAINHAND.getName()).ifPresent(itemStack -> setItemSlot(EquipmentSlot.MAINHAND, itemStack));
 
         return super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
+    }
+
+    public static String garbleName(String name, RandomSource random) {
+        StringBuilder garbledName = new StringBuilder(name);
+
+        for (int i = 0; i < garbledName.length(); i++) {
+            if (random.nextInt(8) == 0) {
+                char newChar = (char) ('a' + random.nextInt(26));
+                garbledName.setCharAt(i, newChar);
+            }
+        }
+
+        return garbledName.toString();
     }
 
     @Override

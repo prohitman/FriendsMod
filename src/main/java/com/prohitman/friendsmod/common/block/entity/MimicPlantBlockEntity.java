@@ -51,6 +51,7 @@ public class MimicPlantBlockEntity extends BlockEntity {
             mimic.generateLimbScales();
             mimic.setModelScale(Mth.nextFloat(level.getRandom(), 0.85f, 1.05f));
             mimic.setHasPlayer(true);
+            mimic.setMimicName(MimicEntity.garbleName(this.getOwner().name().get(), mimic.getRandom()));
 
             LootTable lootTable = LootUtil.getSpawnWithLootTable((ServerLevel) level, mimic);
             LootContext lootContext = LootUtil.createSpawnWithContext((ServerLevel)level, mimic, lootTable);
