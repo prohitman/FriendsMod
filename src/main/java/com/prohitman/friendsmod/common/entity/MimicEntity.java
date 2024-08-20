@@ -26,6 +26,7 @@ import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
+import javax.print.attribute.standard.MediaSize;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,6 +34,10 @@ import java.util.function.Predicate;
 
 public class MimicEntity extends PathfinderMob {
     private static final EntityDataAccessor<Optional<UUID>> PLAYER_UUID = SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.OPTIONAL_UUID);
+    private static final EntityDataAccessor<Boolean> HAS_PLAYER = SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<String> NAME = SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Boolean> HAS_NAME = SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.BOOLEAN);
+
     private static final EntityDataAccessor<Integer> RED_DIFF = SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> BLUE_DIFF = SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> GREEN_DIFF = SynchedEntityData.defineId(MimicEntity.class, EntityDataSerializers.INT);
@@ -47,9 +52,29 @@ public class MimicEntity extends PathfinderMob {
     public void setPlayerUuid(UUID uuid){
         this.entityData.set(PLAYER_UUID, Optional.of(uuid));
     }
-
     public Optional<UUID> getPlayerUuid(){
         return this.entityData.get(PLAYER_UUID);
+    }
+
+    public void setHasPlayer(boolean hasPlayer){
+        this.entityData.set(HAS_PLAYER, hasPlayer);
+    }
+    public boolean getHasPlayer(){
+        return this.entityData.get(HAS_PLAYER);
+    }
+
+    public void setMimicName(String name){
+        this.entityData.set(NAME, name);
+    }
+    public String getMimicName(){
+        return this.entityData.get(NAME);
+    }
+
+    public void setHasName(boolean hasName){
+        this.entityData.set(HAS_NAME, hasName);
+    }
+    public boolean getHasName(){
+        return this.entityData.get(HAS_NAME);
     }
 
     public void setRedDiff(int red){
@@ -116,6 +141,7 @@ public class MimicEntity extends PathfinderMob {
         this.generateColors();
         this.generateLimbScales();
         this.setModelScale(Mth.nextFloat(level.getRandom(), 0.85f, 1.05f));
+
         LootTable lootTable = LootUtil.getSpawnWithLootTable(level.getLevel(), this);
         LootContext lootContext = LootUtil.createSpawnWithContext(level.getLevel(), this, lootTable);
         LootUtil.generateSingleItem(lootTable, lootContext, EquipmentSlot.MAINHAND.getName()).ifPresent(itemStack -> setItemSlot(EquipmentSlot.MAINHAND, itemStack));
@@ -133,14 +159,14 @@ public class MimicEntity extends PathfinderMob {
             for(Player player : players){
                 Vec3 vec3 = DefaultRandomPos.getPosAway(this, 16, 7, player.position());
                 if (vec3 != null && player.distanceToSqr(vec3.x, vec3.y, vec3.z) >= player.distanceToSqr(this)) {
-                    if(this.getNavigation().isDone()){
+                    this.setAggressive(false);
+                    this.setTarget(null);
+                    //if(this.tickCount % 5 == 0){
                         Path path = this.getNavigation().createPath(vec3.x, vec3.y, vec3.z, 0);
                         if(path != null){
-                            this.getNavigation().moveTo(path, 1.4);
-                            this.setAggressive(false);
-                            this.setTarget(null);
+                            this.getNavigation().moveTo(path, 1.55);
                         }
-                    }
+                    //}
                 }
             }
         }
@@ -185,6 +211,9 @@ public class MimicEntity extends PathfinderMob {
         builder.define(RLEG_SCALE, 0f);
         builder.define(LLEG_SCALE, 0f);
         builder.define(SCALE, 1f);
+        builder.define(HAS_PLAYER, false);
+        builder.define(NAME, "");
+        builder.define(HAS_NAME, false);
     }
 
     @Override
@@ -205,6 +234,9 @@ public class MimicEntity extends PathfinderMob {
             this.setPlayerUuid(compound.getUUID("player_uuid"));
         }
 
+        this.setHasPlayer(compound.getBoolean("has_player"));
+        this.setMimicName(compound.getString("mimic_name"));
+        this.setHasName(compound.getBoolean("has_mimic_name"));
     }
 
     @Override
@@ -224,6 +256,10 @@ public class MimicEntity extends PathfinderMob {
         if(this.getPlayerUuid().isPresent()){
             compound.putUUID("player_uuid", this.getPlayerUuid().get());
         }
+
+        compound.putBoolean("has_player", this.getHasPlayer());
+        compound.putString("mimic_name", this.getMimicName());
+        compound.putBoolean("has_mimic_name", this.getHasName());
     }
 
     @Override

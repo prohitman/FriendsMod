@@ -1,8 +1,11 @@
 package com.prohitman.friendsmod.client;
 
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.yggdrasil.ProfileResult;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.prohitman.friendsmod.common.entity.MimicEntity;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidArmorModel;
 import net.minecraft.client.model.HumanoidModel;
@@ -13,25 +16,37 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.ArrowLayer;
+import net.minecraft.client.renderer.entity.layers.CapeLayer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.client.resources.SkinManager;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import net.minecraft.util.datafix.fixes.PlayerHeadBlockProfileFix;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.PlayerHeadBlock;
+import net.minecraft.world.level.block.SkullBlock;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import net.neoforged.neoforge.common.Tags;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Iterator;
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T, PlayerModel<T>> {
     private static Deferred wide;
@@ -51,15 +66,67 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
 
     @Override
     public void render(T pEntity, float pEntityYaw, float pPartialTicks, PoseStack pPoseStack, MultiBufferSource pBuffer, int pPackedLight) {
-        if(DefaultPlayerSkin.get(pEntity.getPlayerUuid().get()).model() == PlayerSkin.Model.SLIM){
+        PlayerSkin playerSkin;
+        //String name;
+        var profile = Deferred.cache.computeIfAbsent(
+                pEntity.getPlayerUuid().get(), key -> CompletableFuture.supplyAsync(() -> Optional.ofNullable(
+                        Minecraft.getInstance().getMinecraftSessionService().fetchProfile(key, false)
+                ), Util.ioPool())
+        ).getNow(null);
+
+        if (profile == null || !pEntity.getHasPlayer()) {
+            playerSkin = DefaultPlayerSkin.get(pEntity.getPlayerUuid().get());
+            System.out.println("Profile null");
+            if(pEntity.getMimicName().isEmpty()){
+                //System.out.println("I dont have a name indeed");
+                pEntity.setMimicName(garbleName(pEntity.getName().getString(), pEntity.getRandom()));
+                pEntity.setHasName(true);
+            }
+        } else {
+            playerSkin = profile
+                    .map(profileResult ->
+                            Minecraft.getInstance().getSkinManager().getInsecureSkin(profileResult.profile()))
+                    .orElseGet(() -> DefaultPlayerSkin.get(pEntity.getPlayerUuid().get()));
+
+            if(profile.isPresent()){
+                //name = profile.get().profile().getName();
+                //System.out.println("Profile Present");
+
+                if(pEntity.getMimicName().isEmpty()){
+                    pEntity.setMimicName(garbleName(profile.get().profile().getName(), pEntity.getRandom()));
+                    pEntity.setHasName(true);
+                }
+            } else {
+                //System.out.println("Profile not present");
+
+                playerSkin = DefaultPlayerSkin.get(pEntity.getPlayerUuid().get());
+                if(pEntity.getMimicName().isEmpty()){
+                    pEntity.setMimicName(garbleName(pEntity.getName().getString(), pEntity.getRandom()));
+                    pEntity.setHasName(true);
+                }
+            }
+        }
+
+        if(playerSkin.model() == PlayerSkin.Model.SLIM){
             slim.render(pEntity, pEntityYaw, pPartialTicks, pPoseStack, pBuffer, pPackedLight);
         } else {
             wide.render(pEntity, pEntityYaw, pPartialTicks, pPoseStack, pBuffer, pPackedLight);
         }
-/*        List<? extends String> displayNames = Config.SERVER.names.get();
-        if (Config.CLIENT.displayNames.get() && !displayNames.isEmpty()) {
-            renderNameTag(pEntity, Component.literal(displayNames.get(Math.floorMod(pEntity.getUUID().hashCode(), displayNames.size()))), pPoseStack, pBuffer, pPackedLight, pPartialTicks);
-        }*/
+
+        renderNameTag(pEntity, Component.literal(pEntity.getMimicName()), pPoseStack, pBuffer, pPackedLight, pPartialTicks);
+    }
+
+    public static String garbleName(String name, RandomSource random) {
+        StringBuilder garbledName = new StringBuilder(name);
+
+        for (int i = 0; i < garbledName.length(); i++) {
+            if (random.nextInt(6) == 0) {
+                char newChar = (char) ('a' + random.nextInt(26));
+                garbledName.setCharAt(i, newChar);
+            }
+        }
+
+        return garbledName.toString();
     }
 
     @Override
@@ -69,6 +136,7 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
 
     public static class Deferred extends HumanoidMobRenderer<MimicEntity, PlayerModel<MimicEntity>> {
         protected final PlayerSkin.Model modelType;
+        public static final Map<UUID, CompletableFuture<Optional<ProfileResult>>> cache = new HashMap<>();
 
         public Deferred(EntityRendererProvider.Context pContext, PlayerSkin.Model modelType) {
             super(pContext, new PlayerModel<>(pContext.bakeLayer(modelType == PlayerSkin.Model.SLIM ? ModelLayers.PLAYER_SLIM : ModelLayers.PLAYER), modelType == PlayerSkin.Model.SLIM), 0.5f);
@@ -82,6 +150,7 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
                     )
             );
             addLayer(new ArrowLayer<>(pContext, this));
+            //addLayer(new CapeLayer(this));
         }
 
         @Override
@@ -182,6 +251,52 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
             }
 
             poseStack.popPose();
+        }
+
+        @Nullable
+        protected RenderType getRenderType(MimicEntity livingEntity, boolean bodyVisible, boolean translucent, boolean glowing) {
+            ResourceLocation resourceLocation;
+
+            if(!livingEntity.getHasPlayer()){
+                resourceLocation = DefaultPlayerSkin.get(livingEntity.getPlayerUuid().get()).texture();
+            }
+            else {
+                PlayerSkin playerSkin;
+                var profile = cache.computeIfAbsent(
+                        livingEntity.getPlayerUuid().get(), key -> CompletableFuture.supplyAsync(() -> Optional.ofNullable(
+                                Minecraft.getInstance().getMinecraftSessionService().fetchProfile(key, false)
+                        ), Util.ioPool())
+                ).getNow(null);
+
+                if(profile == null) {
+                    playerSkin = DefaultPlayerSkin.get(livingEntity.getPlayerUuid().get());
+                } else {
+                    playerSkin = profile
+                            .map(profileResult ->
+                                    Minecraft.getInstance().getSkinManager().getInsecureSkin(profileResult.profile()))
+                            .orElseGet(() -> DefaultPlayerSkin.get(livingEntity.getPlayerUuid().get()));
+                }
+
+                resourceLocation = playerSkin.texture();
+            }
+
+/*
+            if(profileResult == null){
+                resourceLocation = DefaultPlayerSkin.get(livingEntity.getPlayerUuid().get()).texture();
+            } else {
+                GameProfile profile = profileResult.profile();
+
+                resourceLocation = skinmanager.getInsecureSkin(profile).texture();
+            }*/
+
+
+            if (translucent) {
+                return RenderType.itemEntityTranslucentCull(resourceLocation);
+            } else if (bodyVisible) {
+                return this.model.renderType(resourceLocation);
+            } else {
+                return glowing ? RenderType.outline(resourceLocation) : null;
+            }
         }
 
         public static void scaleModelParts(MimicEntity entity, PlayerModel<MimicEntity> model){

@@ -16,6 +16,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.SkullBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.storage.loot.LootContext;
@@ -43,11 +44,13 @@ public class MimicPlantBlockEntity extends BlockEntity {
                 && this.level.random.nextInt(10) == 0 && this.owner != null
                 && !this.level.isClientSide){
             MimicEntity mimic = new MimicEntity(level);
+
             mimic.setPlayerUuid(this.getOwner().id().get());
             mimic.setPos(this.getBlockPos().getX(), this.getBlockPos().getY(), this.getBlockPos().getZ());
             mimic.generateColors();
             mimic.generateLimbScales();
             mimic.setModelScale(Mth.nextFloat(level.getRandom(), 0.85f, 1.05f));
+            mimic.setHasPlayer(true);
 
             LootTable lootTable = LootUtil.getSpawnWithLootTable((ServerLevel) level, mimic);
             LootContext lootContext = LootUtil.createSpawnWithContext((ServerLevel)level, mimic, lootTable);
