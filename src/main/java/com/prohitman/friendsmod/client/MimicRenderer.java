@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.yggdrasil.ProfileResult;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.prohitman.friendsmod.client.layers.MimicCapeLayer;
 import com.prohitman.friendsmod.common.entity.MimicEntity;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -67,20 +68,18 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
     @Override
     public void render(T pEntity, float pEntityYaw, float pPartialTicks, PoseStack pPoseStack, MultiBufferSource pBuffer, int pPackedLight) {
         PlayerSkin playerSkin;
-        //String name;
-        var profile = Deferred.cache.computeIfAbsent(
+        var skin= Deferred.cache.computeIfAbsent(
                 pEntity.getPlayerUuid().get(), key -> CompletableFuture.supplyAsync(() -> Optional.ofNullable(
                         Minecraft.getInstance().getMinecraftSessionService().fetchProfile(key, false)
-                ), Util.ioPool())
+                ), Util.ioPool()).thenCompose(o -> o
+                        .map(p -> Minecraft.getInstance().getSkinManager().getOrLoad(p.profile()))
+                        .orElse(CompletableFuture.completedFuture(null))
+                )
         ).getNow(null);
-
-        if (profile == null || !pEntity.getHasPlayer()) {
+        if (skin == null || !pEntity.getHasPlayer()) {
             playerSkin = DefaultPlayerSkin.get(pEntity.getPlayerUuid().get());
         } else {
-            playerSkin = profile
-                    .map(profileResult ->
-                            Minecraft.getInstance().getSkinManager().getInsecureSkin(profileResult.profile()))
-                    .orElseGet(() -> DefaultPlayerSkin.get(pEntity.getPlayerUuid().get()));
+            playerSkin = skin;
         }
 
         if(playerSkin.model() == PlayerSkin.Model.SLIM){
@@ -99,7 +98,7 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
 
     public static class Deferred extends HumanoidMobRenderer<MimicEntity, PlayerModel<MimicEntity>> {
         protected final PlayerSkin.Model modelType;
-        public static final Map<UUID, CompletableFuture<Optional<ProfileResult>>> cache = new HashMap<>();
+        public static final Map<UUID, CompletableFuture<PlayerSkin>> cache = new HashMap<>();
 
         public Deferred(EntityRendererProvider.Context pContext, PlayerSkin.Model modelType) {
             super(pContext, new PlayerModel<>(pContext.bakeLayer(modelType == PlayerSkin.Model.SLIM ? ModelLayers.PLAYER_SLIM : ModelLayers.PLAYER), modelType == PlayerSkin.Model.SLIM), 0.5f);
@@ -113,7 +112,7 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
                     )
             );
             addLayer(new ArrowLayer<>(pContext, this));
-            //addLayer(new CapeLayer(this));
+            addLayer(new MimicCapeLayer(this));
         }
 
         @Override
@@ -225,33 +224,22 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
             }
             else {
                 PlayerSkin playerSkin;
-                var profile = cache.computeIfAbsent(
+                var skin= Deferred.cache.computeIfAbsent(
                         livingEntity.getPlayerUuid().get(), key -> CompletableFuture.supplyAsync(() -> Optional.ofNullable(
                                 Minecraft.getInstance().getMinecraftSessionService().fetchProfile(key, false)
-                        ), Util.ioPool())
+                        ), Util.ioPool()).thenCompose(o -> o
+                                .map(p -> Minecraft.getInstance().getSkinManager().getOrLoad(p.profile()))
+                                .orElse(CompletableFuture.completedFuture(null))
+                        )
                 ).getNow(null);
-
-                if(profile == null) {
+                if (skin == null || !livingEntity.getHasPlayer()) {
                     playerSkin = DefaultPlayerSkin.get(livingEntity.getPlayerUuid().get());
                 } else {
-                    playerSkin = profile
-                            .map(profileResult ->
-                                    Minecraft.getInstance().getSkinManager().getInsecureSkin(profileResult.profile()))
-                            .orElseGet(() -> DefaultPlayerSkin.get(livingEntity.getPlayerUuid().get()));
+                    playerSkin = skin;
                 }
 
                 resourceLocation = playerSkin.texture();
             }
-
-/*
-            if(profileResult == null){
-                resourceLocation = DefaultPlayerSkin.get(livingEntity.getPlayerUuid().get()).texture();
-            } else {
-                GameProfile profile = profileResult.profile();
-
-                resourceLocation = skinmanager.getInsecureSkin(profile).texture();
-            }*/
-
 
             if (translucent) {
                 return RenderType.itemEntityTranslucentCull(resourceLocation);

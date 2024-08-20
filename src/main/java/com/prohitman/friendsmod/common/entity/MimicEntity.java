@@ -110,6 +110,16 @@ public class MimicEntity extends PathfinderMob {
        return livingEntity.getType().getCategory().isFriendly() && !(livingEntity instanceof NeutralMob) && !(livingEntity instanceof WaterAnimal);
     });
 
+    public double xCloakO;
+    public double yCloakO;
+    public double zCloakO;
+    public double xCloak;
+    public double yCloak;
+    public double zCloak;
+
+    public float oBob;
+    public float bob;
+
     public MimicEntity(Level level) {
         super(ModEntityTypes.MIMIC.get(), level);
         this.xpReward = 5;
@@ -155,19 +165,84 @@ public class MimicEntity extends PathfinderMob {
         StringBuilder garbledName = new StringBuilder(name);
 
         for (int i = 0; i < garbledName.length(); i++) {
-            if (random.nextInt(8) == 0) {
+            if (random.nextInt(5) == 0) {
                 char newChar = (char) ('a' + random.nextInt(26));
                 garbledName.setCharAt(i, newChar);
             }
+        }
+
+        if(garbledName.toString().equals(name)){
+            int i = random.nextInt(name.length());
+            char newChar = (char) ('a' + random.nextInt(26));
+            garbledName.setCharAt(i, newChar);
         }
 
         return garbledName.toString();
     }
 
     @Override
+    public void tick() {
+        super.tick();
+        this.moveCloak();
+    }
+
+    private void moveCloak() {
+        this.xCloakO = this.xCloak;
+        this.yCloakO = this.yCloak;
+        this.zCloakO = this.zCloak;
+        double d0 = this.getX() - this.xCloak;
+        double d1 = this.getY() - this.yCloak;
+        double d2 = this.getZ() - this.zCloak;
+        double d3 = 10.0;
+        if (d0 > 10.0) {
+            this.xCloak = this.getX();
+            this.xCloakO = this.xCloak;
+        }
+
+        if (d2 > 10.0) {
+            this.zCloak = this.getZ();
+            this.zCloakO = this.zCloak;
+        }
+
+        if (d1 > 10.0) {
+            this.yCloak = this.getY();
+            this.yCloakO = this.yCloak;
+        }
+
+        if (d0 < -10.0) {
+            this.xCloak = this.getX();
+            this.xCloakO = this.xCloak;
+        }
+
+        if (d2 < -10.0) {
+            this.zCloak = this.getZ();
+            this.zCloakO = this.zCloak;
+        }
+
+        if (d1 < -10.0) {
+            this.yCloak = this.getY();
+            this.yCloakO = this.yCloak;
+        }
+
+        this.xCloak += d0 * 0.25;
+        this.zCloak += d2 * 0.25;
+        this.yCloak += d1 * 0.25;
+    }
+
+    @Override
     public void aiStep() {
         updateSwingTime();
+        this.oBob = this.bob;
+
         super.aiStep();
+        float f;
+        if (this.onGround() && !this.isDeadOrDying() && !this.isSwimming()) {
+            f = Math.min(0.1F, (float)this.getDeltaMovement().horizontalDistance());
+        } else {
+            f = 0.0F;
+        }
+        this.bob = this.bob + (f - this.bob) * 0.4F;
+
         List<Player> players = this.level().getEntitiesOfClass(Player.class, this.getBoundingBox().inflate(25.0D), EntitySelector.NO_CREATIVE_OR_SPECTATOR);
 
         if(!players.isEmpty()){
