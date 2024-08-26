@@ -34,7 +34,7 @@ public class MimicCapeLayer extends RenderLayer<MimicEntity, PlayerModel<MimicEn
     }
 
     public void render(PoseStack poseStack, MultiBufferSource buffer, int packedLight, MimicEntity livingEntity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-        if (!livingEntity.isInvisible() /*&& livingEntity.isModelPartShown(PlayerModelPart.CAPE)*/) {
+        if (!livingEntity.isInvisible() && livingEntity.getHasPlayer() /*&& livingEntity.isModelPartShown(PlayerModelPart.CAPE)*/) {
             PlayerSkin playerSkin;
             var skin= MimicRenderer.Deferred.cache.computeIfAbsent(
                     livingEntity.getPlayerUuid().get(), key -> CompletableFuture.supplyAsync(() -> Optional.ofNullable(

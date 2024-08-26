@@ -3,10 +3,14 @@ package com.prohitman.friendsmod.common.entity;
 import com.prohitman.friendsmod.common.entity.goals.PlaceBlockGoal;
 import com.prohitman.friendsmod.core.ModEntityTypes;
 import com.prohitman.friendsmod.loot.LootUtil;
+import com.prohitman.friendsmod.vc.EntityPlayerManager;
+import com.prohitman.friendsmod.vc.FriendsVoicePlugin;
+import de.maxhenkel.voicechat.api.VoicechatServerApi;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
@@ -27,7 +31,6 @@ import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
-import javax.print.attribute.standard.MediaSize;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -119,6 +122,19 @@ public class MimicEntity extends PathfinderMob {
 
     public float oBob;
     public float bob;
+
+    public short[] currentSound;
+    public UUID currentChannel;
+    public UUID fromPlayer;
+    public VoicechatServerApi vcApi;
+
+    public void setCurrentSound(short[] newSound){
+        currentSound = newSound;
+    }
+
+    public short[] getCurrentSound(){
+        return this.currentSound;
+    }
 
     public MimicEntity(Level level) {
         super(ModEntityTypes.MIMIC.get(), level);
@@ -260,6 +276,65 @@ public class MimicEntity extends PathfinderMob {
                 }
             }
         }
+
+        if(this.tickCount % 80 == 0 && FriendsVoicePlugin.voiceApi != null && level() instanceof ServerLevel serverLevel /*&& !level().isClientSide*/){
+            if(currentChannel != null && EntityPlayerManager.instance().isPlaying(currentChannel)){
+                EntityPlayerManager.instance().stop(currentChannel);
+            }
+            System.out.println("Playing sooound for: " + this.getUUID());
+            UUID channelId = EntityPlayerManager.instance().playEntitySound(
+                    FriendsVoicePlugin.voiceApi,
+                    serverLevel,
+                    this,
+                    32f,
+                    FriendsVoicePlugin.MIMICING
+            );
+
+            if(channelId != null){
+                this.currentChannel = channelId;
+            }
+        }
+
+        /*if(this.tickCount % 60 == 0 && vcApi != null){
+            EntityAudioChannel channel;
+            if (!FriendsVoicePlugin.mimicChannels.containsKey(this.getUUID())){
+                UUID channelId = UUID.randomUUID();
+                channel = vcApi.createEntityAudioChannel(channelId,
+                        vcApi.fromEntity(this));
+                FriendsVoicePlugin.mimicChannels.put(this.getUUID(), channel);
+            } else {
+                channel = FriendsVoicePlugin.mimicChannels.get(this.getUUID());
+            }
+
+            if(channel != null){
+                channel.setCategory(FriendsVoicePlugin.MIMICING);
+                channel.setDistance(100);
+
+                //channel.send();
+*//*                AudioPlayer audioPlayer;
+
+                if(!FriendsVoicePlugin.mimicPlayers.containsKey(this.getUUID())){
+                     audioPlayer = vcApi.createAudioPlayer(channel, FriendsVoicePlugin.playerEncoders.get(fromPlayer), );
+                } else {
+
+                }*//*
+
+                //vcApi.sendEntitySoundPacketTo();
+            }
+
+           //FriendsVoicePlugin.mimicChannels
+           //         .computeIfAbsent(this.getUUID(), vcApi.createEntityAudioChannel(this.getUUID(),
+           //                 vcApi.fromEntity(this)));
+
+            *//*() -> {
+                        EntityAudioChannel channel = vcApi.createEntityAudioChannel(this.getUUID(),
+                                vcApi.fromEntity(this));
+                        channel.setDistance(100);
+                        channel.setCategory(FriendsVoicePlugin.MIMICING);
+
+                        return channel;
+                    });*//*
+        }*/
     }
 
     public void generateColors(){

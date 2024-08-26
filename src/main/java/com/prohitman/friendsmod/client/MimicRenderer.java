@@ -8,6 +8,7 @@ import com.prohitman.friendsmod.client.layers.MimicCapeLayer;
 import com.prohitman.friendsmod.common.entity.MimicEntity;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.PeriodicNotificationManager;
 import net.minecraft.client.model.HumanoidArmorModel;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
@@ -68,18 +69,19 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
     @Override
     public void render(T pEntity, float pEntityYaw, float pPartialTicks, PoseStack pPoseStack, MultiBufferSource pBuffer, int pPackedLight) {
         PlayerSkin playerSkin;
-        var skin= Deferred.cache.computeIfAbsent(
-                pEntity.getPlayerUuid().get(), key -> CompletableFuture.supplyAsync(() -> Optional.ofNullable(
-                        Minecraft.getInstance().getMinecraftSessionService().fetchProfile(key, false)
-                ), Util.ioPool()).thenCompose(o -> o
-                        .map(p -> Minecraft.getInstance().getSkinManager().getOrLoad(p.profile()))
-                        .orElse(CompletableFuture.completedFuture(null))
-                )
-        ).getNow(null);
-        if (skin == null || !pEntity.getHasPlayer()) {
-            playerSkin = DefaultPlayerSkin.get(pEntity.getPlayerUuid().get());
+        if(!pEntity.getHasPlayer()){
+            playerSkin = DefaultPlayerSkin.get(pEntity.getUUID());
         } else {
-            playerSkin = skin;
+            var skin = Deferred.cache.computeIfAbsent(
+                    pEntity.getPlayerUuid().get(), key -> CompletableFuture.supplyAsync(() -> Optional.ofNullable(
+                            Minecraft.getInstance().getMinecraftSessionService().fetchProfile(key, false)
+                    ), Util.ioPool()).thenCompose(o -> o
+                            .map(p -> Minecraft.getInstance().getSkinManager().getOrLoad(p.profile()))
+                            .orElse(CompletableFuture.completedFuture(null))
+                    )
+            ).getNow(null);
+            playerSkin = Objects.requireNonNullElseGet(skin,
+                    () -> DefaultPlayerSkin.get(pEntity.getPlayerUuid().get()));
         }
 
         if(playerSkin.model() == PlayerSkin.Model.SLIM){
@@ -220,11 +222,11 @@ public class MimicRenderer<T extends MimicEntity> extends HumanoidMobRenderer<T,
             ResourceLocation resourceLocation;
 
             if(!livingEntity.getHasPlayer()){
-                resourceLocation = DefaultPlayerSkin.get(livingEntity.getPlayerUuid().get()).texture();
+                resourceLocation = DefaultPlayerSkin.get(livingEntity.getUUID()).texture();
             }
             else {
                 PlayerSkin playerSkin;
-                var skin= Deferred.cache.computeIfAbsent(
+                var skin = Deferred.cache.computeIfAbsent(
                         livingEntity.getPlayerUuid().get(), key -> CompletableFuture.supplyAsync(() -> Optional.ofNullable(
                                 Minecraft.getInstance().getMinecraftSessionService().fetchProfile(key, false)
                         ), Util.ioPool()).thenCompose(o -> o
