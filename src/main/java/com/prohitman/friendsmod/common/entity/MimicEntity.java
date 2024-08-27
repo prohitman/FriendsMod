@@ -130,6 +130,7 @@ public class MimicEntity extends PathfinderMob {
     public UUID currentChannel;
     public UUID fromPlayer;
     public VoicechatServerApi vcApi;
+    public boolean canResetSound = true;
 
     public void setCurrentSound(List<short[]> newSound){
         currentSound = newSound;

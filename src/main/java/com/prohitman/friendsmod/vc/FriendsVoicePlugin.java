@@ -21,6 +21,7 @@ import java.util.*;
 @ForgeVoicechatPlugin
 public class FriendsVoicePlugin implements VoicechatPlugin {
     public static final Map<UUID, EntityAudioChannel> mimicChannels = new HashMap<>();
+    public static final Map<UUID, UUID> mimicToPlayerListener = new HashMap<>();
     public static final Map<UUID, AudioPlayer> mimicPlayers = new HashMap<>();
 
     public static final Map<UUID, OpusEncoder> playerEncoders = new HashMap<>();
@@ -41,11 +42,8 @@ public class FriendsVoicePlugin implements VoicechatPlugin {
 
     public void micPacketEvent(MicrophonePacketEvent event){
         VoicechatConnection senderConnection = event.getSenderConnection();
+        //boolean wentSilent = false;
         if (senderConnection == null) {
-            return;
-        }
-
-        if (event.getPacket().getOpusEncodedData().length <= 0) {
             return;
         }
 
@@ -53,31 +51,56 @@ public class FriendsVoicePlugin implements VoicechatPlugin {
             return;
         }
 
-        if(event.getPacket().getOpusEncodedData().length != 0){
-            if(event.getSenderConnection().getPlayer().getPlayer() instanceof ServerPlayer player){
-                OpusDecoder decoder = playerDecoders.get(player.getUUID());
-                if(decoder == null){
-                    return;
-                }
-                byte[] encodedData = event.getPacket().getOpusEncodedData();
-                if(encodedData.length == 0){
-                    decoder.resetState();
-                }
+        if(event.getSenderConnection().getPlayer().getPlayer() instanceof ServerPlayer player){
+            OpusDecoder decoder = playerDecoders.get(player.getUUID());
+            if(decoder == null){
+                return;
+            }
+            byte[] encodedData = event.getPacket().getOpusEncodedData();
+            if(encodedData.length == 0){
+                decoder.resetState();
+            }
 
-                short[] decodedData = decoder.decode(encodedData);
+            short[] decodedData = decoder.decode(encodedData);
 
-                player.level().getServer().execute(() ->
-                        {
-                            List<MimicEntity> mimics;
-                            mimics = player.level().getEntitiesOfClass(MimicEntity.class, player.getBoundingBox().inflate(16));
-                            if(!mimics.isEmpty()){
-                                for(MimicEntity mimic : mimics){
+            player.level().getServer().execute(() ->
+                {
+                    List<MimicEntity> mimics;
+                    mimics = player.level().getEntitiesOfClass(MimicEntity.class, player.getBoundingBox().inflate(16));
+                    if(!mimics.isEmpty()){
+                        for(MimicEntity mimic : mimics){
+                            if (event.getPacket().getOpusEncodedData().length <= 0) {
+                                if(mimicToPlayerListener.get(mimic.getUUID()) == player.getUUID()){
+                                    mimic.canResetSound = true;
+                                    mimicToPlayerListener.remove(mimic.getUUID());
+                                }
+
+                            } else {
+                                if(!mimicToPlayerListener.containsKey(mimic.getUUID())){
+                                    mimicToPlayerListener.put(mimic.getUUID(), player.getUUID());
+                                } else if(mimicToPlayerListener.get(mimic.getUUID()) != player.getUUID()){
+                                    return;
+                                }
+
+                                if(mimic.canResetSound){
+                                    mimic.setCurrentSound(null);
+                                }
+
+                                mimic.canResetSound = false;
+
+                                if(mimic.getCurrentSound() == null){
+                                    List<short[]> list = new ArrayList<>();
+
+                                    list.add(decodedData);
+                                    mimic.setCurrentSound(list);
+                                } else {
                                     mimic.getCurrentSound().add(decodedData);
                                 }
                             }
                         }
-                );
-            }
+                    }
+                }
+            );
         }
     }
 
@@ -85,6 +108,7 @@ public class FriendsVoicePlugin implements VoicechatPlugin {
     public void initialize(VoicechatApi api) {
         VoicechatPlugin.super.initialize(api);
         mimicChannels.clear();
+        mimicToPlayerListener.clear();
     }
 
     @Override

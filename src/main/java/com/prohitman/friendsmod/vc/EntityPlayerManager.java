@@ -14,6 +14,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -115,6 +116,7 @@ public class EntityPlayerManager {
     private de.maxhenkel.voicechat.api.audiochannel.AudioPlayer playChannel(VoicechatServerApi api, AudioChannel channel, MimicEntity mimic) {
         try {
             short[] audio = AudioUtils.concatenateShortArrays(mimic.getCurrentSound());
+            //mimic.setCurrentSound(List.of(audio));
 
             if (audio.length == 0) {
                 System.out.println("Audio is empty");
