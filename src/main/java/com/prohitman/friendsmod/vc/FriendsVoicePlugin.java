@@ -72,56 +72,11 @@ public class FriendsVoicePlugin implements VoicechatPlugin {
                             mimics = player.level().getEntitiesOfClass(MimicEntity.class, player.getBoundingBox().inflate(16));
                             if(!mimics.isEmpty()){
                                 for(MimicEntity mimic : mimics){
-                                    System.out.println("Sent Decoded Data");
-                                    mimic.setCurrentSound(decodedData);
-
-                                    /*//if(player.getRandom().nextBoolean()){
-                                        EntityAudioChannel channel;
-                                        if (!FriendsVoicePlugin.mimicChannels.containsKey(mimic.getUUID())){
-                                            UUID channelId = UUID.randomUUID();
-                                            channel = event.getVoicechat().createEntityAudioChannel(channelId,
-                                                    event.getVoicechat().fromEntity(mimic));
-                                            FriendsVoicePlugin.mimicChannels.put(mimic.getUUID(), channel);
-                                        } else {
-                                            channel = FriendsVoicePlugin.mimicChannels.get(mimic.getUUID());
-                                        }
-
-                                        if(channel != null){
-                                            channel.setCategory(FriendsVoicePlugin.MIMICING);
-                                            channel.setDistance(45);
-
-*//*                                            event.getVoicechat().sendStaticSoundPacketTo(event.getSenderConnection(),
-                                                    event.getPacket().staticSoundPacketBuilder()
-                                                            .channelId(channel.getId())
-                                                            .opusEncodedData(event.getPacket().getOpusEncodedData())
-                                                            .category(MIMICING)
-                                                            .build());*//*
-
-                                            event.getVoicechat().sendEntitySoundPacketTo(event.getSenderConnection(),
-                                                    event.getPacket().entitySoundPacketBuilder()
-                                                            .distance(45)
-                                                            //.whispering(false)
-                                                            .opusEncodedData(event.getPacket().getOpusEncodedData())
-                                                            .category(MIMICING)
-                                                            //.channelId(channel.getId())
-                                                            .entityUuid(mimic.getUUID())
-                                                            .build());
-                                        }
-
-                                    //}
-
-                                    //mimic.vcApi = event.getVoicechat();
-                                    //mimic.setCurrentSound(event.getPacket().getOpusEncodedData());
-                                    //mimic.fromPlayer = player.getUUID();*/
+                                    mimic.getCurrentSound().add(decodedData);
                                 }
                             }
                         }
                 );
-/*                OpusEncoder encoder = playerEncoders.get(player.getUUID());
-                if(encoder == null){
-                    return;
-                }*/
-
             }
         }
     }

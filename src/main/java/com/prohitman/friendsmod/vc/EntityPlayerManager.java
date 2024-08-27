@@ -5,7 +5,9 @@ import de.maxhenkel.voicechat.api.Player;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
 import de.maxhenkel.voicechat.api.audiochannel.AudioChannel;
+import de.maxhenkel.voicechat.api.audiochannel.AudioPlayer;
 import de.maxhenkel.voicechat.api.audiochannel.EntityAudioChannel;
+import de.maxhenkel.voicechat.api.audiochannel.LocationalAudioChannel;
 import de.maxhenkel.voicechat.api.packets.MicrophonePacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -41,17 +43,18 @@ public class EntityPlayerManager {
 
     @Nullable
     public UUID playEntitySound(VoicechatServerApi api, ServerLevel level, MimicEntity mimic, float distance, @Nullable String category) {
-        EntityAudioChannel channel;
-        if(!FriendsVoicePlugin.mimicChannels.containsKey(mimic.getUUID())){
+        UUID channelID = UUID.randomUUID();
+        LocationalAudioChannel  channel = api.createLocationalAudioChannel(channelID, api.fromServerLevel(level), api.createPosition(mimic.getX(), mimic.getY(), mimic.getZ()));
+/*        if(!FriendsVoicePlugin.mimicChannels.containsKey(mimic.getUUID())){
             UUID channelID = UUID.randomUUID();
-            channel = api.createEntityAudioChannel(channelID, api.fromEntity(mimic));
+            channel = api.createLocationalAudioChannel(channelID, api.fromServerLevel(level), api.createPosition(mimic.getX(), mimic.getY(), mimic.getZ()));
             System.out.println("Created Channel for: " + mimic.getUUID());
             FriendsVoicePlugin.mimicChannels.put(mimic.getUUID(), channel);
         } else {
             channel = FriendsVoicePlugin.mimicChannels.get(mimic.getUUID());
             System.out.println("Channel exists for: " + mimic.getUUID());
 
-        }
+        }*/
 
         if (channel == null) {
             return null;
@@ -60,7 +63,7 @@ public class EntityPlayerManager {
             channel.setCategory(category);
         }
         channel.setDistance(distance);
-        api.getPlayersInRange(api.fromServerLevel(level), channel.getEntity().getPosition(), distance + 1F, serverPlayer -> {
+        api.getPlayersInRange(api.fromServerLevel(level), channel.getLocation(), distance + 1F, serverPlayer -> {
             VoicechatConnection connection = api.getConnectionOf(serverPlayer);
             if (connection != null) {
                 return connection.isDisabled();
@@ -74,7 +77,7 @@ public class EntityPlayerManager {
         AtomicBoolean stopped = new AtomicBoolean();
         AtomicReference<de.maxhenkel.voicechat.api.audiochannel.AudioPlayer> player = new AtomicReference<>();
 
-        players.put(channel.getId(), new PlayerReference(() -> {
+        players.put(channelID, new PlayerReference(() -> {
             synchronized (stopped) {
                 stopped.set(true);
                 de.maxhenkel.voicechat.api.audiochannel.AudioPlayer audioPlayer = player.get();
@@ -89,11 +92,11 @@ public class EntityPlayerManager {
         executor.execute(() -> {
             de.maxhenkel.voicechat.api.audiochannel.AudioPlayer audioPlayer = playChannel(api, channel, mimic);
             if (audioPlayer == null) {
-                players.remove(channel.getId());
+                players.remove(channelID);
                 return;
             }
             audioPlayer.setOnStopped(() -> {
-                players.remove(channel.getId());
+                players.remove(channelID);
             });
             synchronized (stopped) {
                 if (!stopped.get()) {
@@ -105,13 +108,13 @@ public class EntityPlayerManager {
             }
         });
 
-        return channel.getId();
+        return channelID;
     }
 
     @Nullable
     private de.maxhenkel.voicechat.api.audiochannel.AudioPlayer playChannel(VoicechatServerApi api, AudioChannel channel, MimicEntity mimic) {
         try {
-            short[] audio = mimic.getCurrentSound();
+            short[] audio = AudioUtils.concatenateShortArrays(mimic.getCurrentSound());
 
             if (audio.length == 0) {
                 System.out.println("Audio is empty");

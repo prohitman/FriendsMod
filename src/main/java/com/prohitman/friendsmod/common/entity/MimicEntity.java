@@ -3,9 +3,11 @@ package com.prohitman.friendsmod.common.entity;
 import com.prohitman.friendsmod.common.entity.goals.PlaceBlockGoal;
 import com.prohitman.friendsmod.core.ModEntityTypes;
 import com.prohitman.friendsmod.loot.LootUtil;
+import com.prohitman.friendsmod.vc.AudioUtils;
 import com.prohitman.friendsmod.vc.EntityPlayerManager;
 import com.prohitman.friendsmod.vc.FriendsVoicePlugin;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
+import de.maxhenkel.voicechat.api.audiochannel.AudioPlayer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -31,6 +33,7 @@ import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -123,16 +126,16 @@ public class MimicEntity extends PathfinderMob {
     public float oBob;
     public float bob;
 
-    public short[] currentSound;
+    public List<short[]> currentSound = new ArrayList<>();
     public UUID currentChannel;
     public UUID fromPlayer;
     public VoicechatServerApi vcApi;
 
-    public void setCurrentSound(short[] newSound){
+    public void setCurrentSound(List<short[]> newSound){
         currentSound = newSound;
     }
 
-    public short[] getCurrentSound(){
+    public List<short[]> getCurrentSound(){
         return this.currentSound;
     }
 
@@ -281,6 +284,7 @@ public class MimicEntity extends PathfinderMob {
             if(currentChannel != null && EntityPlayerManager.instance().isPlaying(currentChannel)){
                 EntityPlayerManager.instance().stop(currentChannel);
             }
+
             System.out.println("Playing sooound for: " + this.getUUID());
             UUID channelId = EntityPlayerManager.instance().playEntitySound(
                     FriendsVoicePlugin.voiceApi,
@@ -294,47 +298,6 @@ public class MimicEntity extends PathfinderMob {
                 this.currentChannel = channelId;
             }
         }
-
-        /*if(this.tickCount % 60 == 0 && vcApi != null){
-            EntityAudioChannel channel;
-            if (!FriendsVoicePlugin.mimicChannels.containsKey(this.getUUID())){
-                UUID channelId = UUID.randomUUID();
-                channel = vcApi.createEntityAudioChannel(channelId,
-                        vcApi.fromEntity(this));
-                FriendsVoicePlugin.mimicChannels.put(this.getUUID(), channel);
-            } else {
-                channel = FriendsVoicePlugin.mimicChannels.get(this.getUUID());
-            }
-
-            if(channel != null){
-                channel.setCategory(FriendsVoicePlugin.MIMICING);
-                channel.setDistance(100);
-
-                //channel.send();
-*//*                AudioPlayer audioPlayer;
-
-                if(!FriendsVoicePlugin.mimicPlayers.containsKey(this.getUUID())){
-                     audioPlayer = vcApi.createAudioPlayer(channel, FriendsVoicePlugin.playerEncoders.get(fromPlayer), );
-                } else {
-
-                }*//*
-
-                //vcApi.sendEntitySoundPacketTo();
-            }
-
-           //FriendsVoicePlugin.mimicChannels
-           //         .computeIfAbsent(this.getUUID(), vcApi.createEntityAudioChannel(this.getUUID(),
-           //                 vcApi.fromEntity(this)));
-
-            *//*() -> {
-                        EntityAudioChannel channel = vcApi.createEntityAudioChannel(this.getUUID(),
-                                vcApi.fromEntity(this));
-                        channel.setDistance(100);
-                        channel.setCategory(FriendsVoicePlugin.MIMICING);
-
-                        return channel;
-                    });*//*
-        }*/
     }
 
     public void generateColors(){
@@ -402,6 +365,11 @@ public class MimicEntity extends PathfinderMob {
         this.setHasPlayer(compound.getBoolean("has_player"));
         this.setMimicName(compound.getString("mimic_name"));
         this.setHasName(compound.getBoolean("has_mimic_name"));
+
+        int[] currentSound = compound.getIntArray("current_mimic_sound");
+        short[] currentShortSound = convertIntArrayToShortArray(currentSound);
+
+        this.setCurrentSound(List.of(currentShortSound));
     }
 
     @Override
@@ -425,6 +393,30 @@ public class MimicEntity extends PathfinderMob {
         compound.putBoolean("has_player", this.getHasPlayer());
         compound.putString("mimic_name", this.getMimicName());
         compound.putBoolean("has_mimic_name", this.getHasName());
+
+        this.setCurrentSound(List.of(AudioUtils.concatenateShortArrays(this.getCurrentSound())));
+        int[] currentSound = convertShortArrayToIntArray(this.getCurrentSound().getFirst());
+
+        compound.putIntArray("current_mimic_sound", currentSound);
+    }
+
+    public static int[] convertShortArrayToIntArray(short[] shortArray) {
+        int[] intArray = new int[shortArray.length];
+        for (int i = 0; i < shortArray.length; i++) {
+            intArray[i] = shortArray[i];
+        }
+        return intArray;
+    }
+
+    public static short[] convertIntArrayToShortArray(int[] intArray) {
+        short[] shortArray = new short[intArray.length];
+        for (int i = 0; i < intArray.length; i++) {
+            if (intArray[i] < Short.MIN_VALUE || intArray[i] > Short.MAX_VALUE) {
+                throw new IllegalArgumentException("Value " + intArray[i] + " at index " + i + " is out of short range.");
+            }
+            shortArray[i] = (short) intArray[i];
+        }
+        return shortArray;
     }
 
     @Override
