@@ -5,15 +5,14 @@ import de.maxhenkel.voicechat.api.Player;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
 import de.maxhenkel.voicechat.api.audiochannel.AudioChannel;
-import de.maxhenkel.voicechat.api.audiochannel.AudioPlayer;
-import de.maxhenkel.voicechat.api.audiochannel.EntityAudioChannel;
 import de.maxhenkel.voicechat.api.audiochannel.LocationalAudioChannel;
-import de.maxhenkel.voicechat.api.packets.MicrophonePacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.Nullable;
 
+import javax.sound.sampled.AudioFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -24,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class EntityPlayerManager {
+    public static AudioFormat FORMAT = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 48000F, 16, 1, 2, 48000F, false);
 
     private final Map<UUID, PlayerReference> players;
     private final ExecutorService executor;
@@ -37,25 +37,10 @@ public class EntityPlayerManager {
         });
     }
 
-/*    @Nullable
-    public UUID playLocational(VoicechatServerApi api, ServerLevel level, Vec3 pos, UUID sound, @Nullable ServerPlayer p, float distance, @Nullable String category, int maxLengthSeconds) {
-        return playLocational(api, level, pos, sound, p, distance, category, maxLengthSeconds, false);
-    }*/
-
     @Nullable
     public UUID playEntitySound(VoicechatServerApi api, ServerLevel level, MimicEntity mimic, float distance, @Nullable String category) {
         UUID channelID = UUID.randomUUID();
         LocationalAudioChannel  channel = api.createLocationalAudioChannel(channelID, api.fromServerLevel(level), api.createPosition(mimic.getX(), mimic.getY(), mimic.getZ()));
-/*        if(!FriendsVoicePlugin.mimicChannels.containsKey(mimic.getUUID())){
-            UUID channelID = UUID.randomUUID();
-            channel = api.createLocationalAudioChannel(channelID, api.fromServerLevel(level), api.createPosition(mimic.getX(), mimic.getY(), mimic.getZ()));
-            System.out.println("Created Channel for: " + mimic.getUUID());
-            FriendsVoicePlugin.mimicChannels.put(mimic.getUUID(), channel);
-        } else {
-            channel = FriendsVoicePlugin.mimicChannels.get(mimic.getUUID());
-            System.out.println("Channel exists for: " + mimic.getUUID());
-
-        }*/
 
         if (channel == null) {
             return null;
@@ -83,8 +68,6 @@ public class EntityPlayerManager {
                 stopped.set(true);
                 de.maxhenkel.voicechat.api.audiochannel.AudioPlayer audioPlayer = player.get();
                 if (audioPlayer != null) {
-                    System.out.println("Stopped playing for some other reason");
-
                     audioPlayer.stopPlaying();
                 }
             }
@@ -103,7 +86,6 @@ public class EntityPlayerManager {
                 if (!stopped.get()) {
                     player.set(audioPlayer);
                 } else {
-                    System.out.println("Stopped playing for some reason");
                     audioPlayer.stopPlaying();
                 }
             }
@@ -116,19 +98,44 @@ public class EntityPlayerManager {
     private de.maxhenkel.voicechat.api.audiochannel.AudioPlayer playChannel(VoicechatServerApi api, AudioChannel channel, MimicEntity mimic) {
         try {
             short[] audio = AudioUtils.concatenateShortArrays(mimic.getCurrentSound());
-            //mimic.setCurrentSound(List.of(audio));
 
-            if (audio.length == 0) {
-                System.out.println("Audio is empty");
+            if(!mimic.isSoundClipped){
+                audio = clipAudio(audio, mimic.getRandom());
+                mimic.isSoundClipped = true;
             }
+
+            mimic.setCurrentSound(List.of(audio));
 
             de.maxhenkel.voicechat.api.audiochannel.AudioPlayer player = api.createAudioPlayer(channel, api.createEncoder(), audio);
             player.startPlaying();
-            System.out.println("Started to Play");
             return player;
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static short[] clipAudio(short[] audio, RandomSource random) {
+        float lengthSeconds = getLengthSeconds(audio);
+
+        if (lengthSeconds < 2.0f) {
+            return audio;
+        }
+
+        int sampleRate = (int) FORMAT.getSampleRate();
+
+        int minLengthSamples = 2 * sampleRate;
+        int maxLengthSamples = 5 * sampleRate;
+
+        int maxStartPos = audio.length - minLengthSamples;
+
+        int startPos = random.nextInt(maxStartPos + 1);
+
+        int clipLengthSamples = minLengthSamples + random.nextInt(Math.min(maxLengthSamples, audio.length - startPos) - minLengthSamples + 1);
+
+        short[] clip = new short[clipLengthSamples];
+        System.arraycopy(audio, startPos, clip, 0, clipLengthSamples);
+
+        return clip;
     }
 
     public void stop(UUID channelID) {
@@ -168,14 +175,7 @@ public class EntityPlayerManager {
                                    AtomicReference<de.maxhenkel.voicechat.api.audiochannel.AudioPlayer> player) {
     }
 
-/*    @Nullable
-    public UUID findChannelID(UUID sound, boolean onlyByCommand) {
-        for (Map.Entry<UUID, PlayerReference> entry : players.entrySet()) {
-            if (entry.getValue().sound.equals(sound) && (entry.getValue().byCommand || !onlyByCommand)) {
-                return entry.getKey();
-            }
-        }
-        return null;
-    }*/
-
+    public static float getLengthSeconds(short[] audio) {
+        return (float) audio.length / FORMAT.getSampleRate();
+    }
 }

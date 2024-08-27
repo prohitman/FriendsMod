@@ -3,14 +3,10 @@ package com.prohitman.friendsmod.vc;
 import com.prohitman.friendsmod.FriendsMod;
 import com.prohitman.friendsmod.common.entity.MimicEntity;
 import de.maxhenkel.voicechat.api.*;
-import de.maxhenkel.voicechat.api.audiochannel.AudioPlayer;
 import de.maxhenkel.voicechat.api.audiochannel.EntityAudioChannel;
 import de.maxhenkel.voicechat.api.events.*;
 import de.maxhenkel.voicechat.api.opus.OpusDecoder;
-import de.maxhenkel.voicechat.api.opus.OpusEncoder;
-import de.maxhenkel.voicechat.api.packets.EntitySoundPacket;
 import net.minecraft.server.level.ServerPlayer;
-import org.apache.logging.log4j.core.config.plugins.Plugin;
 
 import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
@@ -22,27 +18,20 @@ import java.util.*;
 public class FriendsVoicePlugin implements VoicechatPlugin {
     public static final Map<UUID, EntityAudioChannel> mimicChannels = new HashMap<>();
     public static final Map<UUID, UUID> mimicToPlayerListener = new HashMap<>();
-    public static final Map<UUID, AudioPlayer> mimicPlayers = new HashMap<>();
-
-    public static final Map<UUID, OpusEncoder> playerEncoders = new HashMap<>();
     public static final Map<UUID, OpusDecoder> playerDecoders = new HashMap<>();
-
     public static final String MIMICING = "mimicing";
     @Nullable
     public static VoicechatServerApi voiceApi;
     @Override
     public void registerEvents(EventRegistration registration) {
         registration.registerEvent(VoicechatServerStartedEvent.class, this::onServerStarted, 5);
-
         registration.registerEvent(PlayerConnectedEvent.class, this::onPlayerConnected, 3);
         registration.registerEvent(PlayerDisconnectedEvent.class, this::onPlayerDisconnected, 3);
-
         registration.registerEvent(MicrophonePacketEvent.class, this::micPacketEvent, 2);
     }
 
     public void micPacketEvent(MicrophonePacketEvent event){
         VoicechatConnection senderConnection = event.getSenderConnection();
-        //boolean wentSilent = false;
         if (senderConnection == null) {
             return;
         }
@@ -93,8 +82,10 @@ public class FriendsVoicePlugin implements VoicechatPlugin {
 
                                     list.add(decodedData);
                                     mimic.setCurrentSound(list);
+                                    mimic.isSoundClipped = false;
                                 } else {
                                     mimic.getCurrentSound().add(decodedData);
+                                    mimic.isSoundClipped = false;
                                 }
                             }
                         }
@@ -123,22 +114,7 @@ public class FriendsVoicePlugin implements VoicechatPlugin {
         UUID uuid = player.getUuid();
 
         OpusDecoder decoder = FriendsVoicePlugin.playerDecoders.computeIfAbsent(uuid, k -> api.createDecoder());
-        //if (!FriendsVoicePlugin.playerDecoders.containsKey(uuid)) {
-            //WalkieMod.LOGGER.info("Couldn't find decoder... Adding decoder for UUID (" + uuid  + ")");
-            FriendsVoicePlugin.playerDecoders.putIfAbsent(uuid, decoder);
-        //}
-
-        OpusEncoder encoder = FriendsVoicePlugin.playerEncoders.computeIfAbsent(uuid, k -> api.createEncoder());
-        //if (!FriendsVoicePlugin.PLAYER_ENCODERS.containsKey(uuid)) {
-            //WalkieMod.LOGGER.info("Couldn't find encoder... Adding encoder for UUID (" + uuid  + ")");
-           FriendsVoicePlugin.playerEncoders.putIfAbsent(uuid, encoder);
-        //}
-
-        //RadioFilter radioFilter = new RadioFilter(3000, 50, 2600);
-        //if (!WalkiePlugin.PLAYER_FILTERS.containsKey(uuid)) {
-            //WalkieMod.LOGGER.info("Couldn't find filter... Adding filter for UUID (" + uuid  + ")");
-         //   WalkiePlugin.PLAYER_FILTERS.putIfAbsent(uuid, radioFilter);
-        //}
+        FriendsVoicePlugin.playerDecoders.putIfAbsent(uuid, decoder);
     }
 
     private void onPlayerDisconnected(PlayerDisconnectedEvent event) {
@@ -146,24 +122,10 @@ public class FriendsVoicePlugin implements VoicechatPlugin {
 
         OpusDecoder decoder = FriendsVoicePlugin.playerDecoders.getOrDefault(uuid, null);
         if (decoder != null) {
-           // WalkieMod.LOGGER.info("Closing decoder for UUID (" + uuid + ").");
             decoder.close();
-        } else {
-           // WalkieMod.LOGGER.warn("Player decoder for UUID (" + uuid + ") did not close.");
         }
 
         FriendsVoicePlugin.playerDecoders.remove(uuid);
-
-        OpusEncoder encoder = FriendsVoicePlugin.playerEncoders.getOrDefault(uuid, null);
-        if (encoder != null) {
-          //  WalkieMod.LOGGER.info("Closing encoder for UUID (" + uuid + ").");
-            encoder.close();
-        } else {
-           // WalkieMod.LOGGER.warn("Player encoder for UUID (" + uuid + ") did not close.");
-        }
-
-        FriendsVoicePlugin.playerEncoders.remove(uuid);
-       // WalkiePlugin.PLAYER_FILTERS.remove(uuid);
     }
 
     private void onServerStarted(VoicechatServerStartedEvent event) {

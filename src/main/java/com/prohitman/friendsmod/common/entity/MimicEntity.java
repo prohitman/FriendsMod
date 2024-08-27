@@ -6,8 +6,6 @@ import com.prohitman.friendsmod.loot.LootUtil;
 import com.prohitman.friendsmod.vc.AudioUtils;
 import com.prohitman.friendsmod.vc.EntityPlayerManager;
 import com.prohitman.friendsmod.vc.FriendsVoicePlugin;
-import de.maxhenkel.voicechat.api.VoicechatServerApi;
-import de.maxhenkel.voicechat.api.audiochannel.AudioPlayer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -128,14 +126,13 @@ public class MimicEntity extends PathfinderMob {
 
     public List<short[]> currentSound = new ArrayList<>();
     public UUID currentChannel;
-    public UUID fromPlayer;
-    public VoicechatServerApi vcApi;
     public boolean canResetSound = true;
-
+    public boolean isSoundClipped = false;
+    public int mimicingCooldown = 0;
     public void setCurrentSound(List<short[]> newSound){
         currentSound = newSound;
-    }
 
+    }
     public List<short[]> getCurrentSound(){
         return this.currentSound;
     }
@@ -281,12 +278,19 @@ public class MimicEntity extends PathfinderMob {
             }
         }
 
-        if(this.tickCount % 80 == 0 && FriendsVoicePlugin.voiceApi != null && level() instanceof ServerLevel serverLevel /*&& !level().isClientSide*/){
+        if(!level().isClientSide){
+            if(mimicingCooldown > 0){
+                mimicingCooldown--;
+            } else {
+                mimicingCooldown = 0;
+            }
+        }
+
+        if(random.nextFloat() < 0.5 && FriendsVoicePlugin.voiceApi != null && level() instanceof ServerLevel serverLevel && mimicingCooldown == 0){
             if(currentChannel != null && EntityPlayerManager.instance().isPlaying(currentChannel)){
                 EntityPlayerManager.instance().stop(currentChannel);
             }
 
-            System.out.println("Playing sooound for: " + this.getUUID());
             UUID channelId = EntityPlayerManager.instance().playEntitySound(
                     FriendsVoicePlugin.voiceApi,
                     serverLevel,
@@ -294,6 +298,8 @@ public class MimicEntity extends PathfinderMob {
                     32f,
                     FriendsVoicePlugin.MIMICING
             );
+
+            mimicingCooldown = 500 + random.nextInt(200);
 
             if(channelId != null){
                 this.currentChannel = channelId;
@@ -371,6 +377,8 @@ public class MimicEntity extends PathfinderMob {
         short[] currentShortSound = convertIntArrayToShortArray(currentSound);
 
         this.setCurrentSound(List.of(currentShortSound));
+
+        this.mimicingCooldown = compound.getInt("mimicing_cooldown");
     }
 
     @Override
@@ -399,6 +407,7 @@ public class MimicEntity extends PathfinderMob {
         int[] currentSound = convertShortArrayToIntArray(this.getCurrentSound().getFirst());
 
         compound.putIntArray("current_mimic_sound", currentSound);
+        compound.putInt("mimicing_cooldown", mimicingCooldown);
     }
 
     public static int[] convertShortArrayToIntArray(short[] shortArray) {
